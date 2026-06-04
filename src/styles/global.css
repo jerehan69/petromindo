@@ -197,50 +197,48 @@ section {
   gap: 0.3rem;
 }
 
-.project-layout {
-  display: grid;
-  grid-template-columns: 1fr 1.3fr;
-  gap: 2rem;
-  align-items: start;
+.video-stage {
+  width: 100%;
+  overflow: hidden;
+}
+
+.video-hero {
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              border-radius 0.4s ease,
+              box-shadow 0.4s ease;
+  width: 100%;
+}
+
+.video-hero video {
+  display: block;
+  width: 100%;
+}
+
+.video-hero.minimized {
+  position: fixed;
+  top: 4.5rem;
+  right: 1.5rem;
+  width: min(45%, 520px);
+  z-index: 10;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 .project-content {
   font-size: 1rem;
   line-height: 1.8;
   color: var(--text);
-  max-height: 70vh;
-  overflow-y: auto;
-  padding-right: 0.5rem;
+  transition: padding-right 0.5s ease, padding-top 0.5s ease;
 }
 
-.project-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.project-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.project-content::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
-
-.video-column {
-  position: sticky;
-  top: 2rem;
-}
-
-.video-wrapper {
-  background: #000;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-
-.video-wrapper video {
-  display: block;
-  width: 100%;
+.project-content.video-minimized {
+  padding-right: min(48%, 540px);
+  padding-top: 0.5rem;
 }
 
 .project-content h2 {
@@ -409,17 +407,20 @@ footer .links a:hover {
 }
 
 @media (max-width: 768px) {
-  .project-layout {
-    grid-template-columns: 1fr;
+  .video-hero.minimized {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    border-radius: 0;
+    max-height: 35vh;
   }
 
-  .project-content {
-    max-height: none;
-    overflow-y: visible;
-  }
-
-  .video-column {
-    position: static;
+  .project-content.video-minimized {
+    padding-right: 0;
+    padding-bottom: 35vh;
   }
 }
 
