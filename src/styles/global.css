@@ -223,7 +223,7 @@ section {
   position: fixed;
   top: 4.5rem;
   right: 1.5rem;
-  width: min(45%, 520px);
+  width: min(55%, 720px);
   z-index: 10;
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
@@ -237,7 +237,7 @@ section {
 }
 
 .project-content.video-minimized {
-  padding-right: min(48%, 540px);
+  padding-right: min(58%, 740px);
   padding-top: 0.5rem;
 }
 
@@ -420,7 +420,7 @@ footer .links a:hover {
 
   .project-content.video-minimized {
     padding-right: 0;
-    padding-bottom: 35vh;
+    padding-bottom: 40vh;
   }
 }
 

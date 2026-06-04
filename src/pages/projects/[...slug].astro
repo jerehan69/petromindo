@@ -29,7 +29,7 @@ const { Content } = await render(project);
     {project.data.video && (
       <div class="video-stage" id="video-stage">
         <div class="video-hero" id="video-hero">
-          <video controls autoplay muted loop playsinline>
+          <video controls autoplay muted loop playsinline id="project-video">
             <source src={project.data.video} type="video/mp4" />
           </video>
         </div>
@@ -53,12 +53,26 @@ const { Content } = await render(project);
     let naturalHeight = 0;
     let isTransitioning = false;
 
+    function pauseAtEnd(video) {
+      if (!video.paused) {
+        video.pause();
+      }
+    }
+
+    function playVideo(video) {
+      if (video.paused) {
+        video.currentTime = 0;
+        video.play();
+      }
+    }
+
     function update() {
       const rect = stage.getBoundingClientRect();
       const shouldFix = rect.bottom < 80;
 
       if (shouldFix !== isFixed && !isTransitioning) {
         isFixed = shouldFix;
+        const video = document.getElementById('project-video');
 
         if (shouldFix) {
           naturalHeight = stage.offsetHeight;
@@ -68,6 +82,7 @@ const { Content } = await render(project);
           stage.style.height = '0px';
           hero.classList.add('minimized');
           text.classList.add('video-minimized');
+          if (video) pauseAtEnd(video);
           setTimeout(() => { stage.style.transition = ''; isTransitioning = false; }, 550);
           isTransitioning = true;
         } else {
@@ -75,6 +90,7 @@ const { Content } = await render(project);
           stage.style.height = naturalHeight + 'px';
           hero.classList.remove('minimized');
           text.classList.remove('video-minimized');
+          if (video) playVideo(video);
           setTimeout(() => {
             stage.style.height = '';
             stage.style.transition = '';
