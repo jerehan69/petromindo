@@ -199,7 +199,7 @@ section {
 
 .project-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1.3fr;
   gap: 2rem;
   align-items: start;
 }
