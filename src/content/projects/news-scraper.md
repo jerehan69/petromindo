@@ -1,6 +1,6 @@
 ---
-title: "Petromindo Scraper"
-description: "A targeted newsfeed that scrapes Petromindo and Jakarta Post for Indonesian energy news, automatically categorized and formatted into Google Sheets."
+title: "News Scraper"
+description: "A targeted newsfeed that scrapes Indonesian energy news sources, automatically categorized and formatted into Google Sheets."
 date: 2026-06-05
 tags: ["Python", "Web Scraping", "Automation", "Google Sheets", "Kimi WebBridge"]
 video: "/videos/petromindo-scraper.mp4"
@@ -8,13 +8,13 @@ video: "/videos/petromindo-scraper.mp4"
 
 ## What it does
 
-This scraper watches **Petromindo.com** and **The Jakarta Post** — two of Indonesia's key energy/news sources — and pulls every article into a formatted Google Sheet. It runs automatically via the Kimi WebBridge browser automation tool.
+This scraper watches **Petromindo.com** and **The Jakarta Post** — two of Indonesia's key energy/news sources — and pulls every article into a formatted Google Sheet.
 
 Think of it as a **targeted newsfeed** for the Indonesian energy sector. Instead of checking multiple sites manually, the scraper does the rounds and dumps everything into one clean spreadsheet.
 
 ## How it works
 
-The script uses **Kimi WebBridge** to control a real browser session. It navigates to each news site, extracts article data (titles, URLs, timestamps) through JavaScript injection, then writes everything to Google Sheets via the Sheets API.
+The script uses browser automation to navigate news sites, extracts article data through JavaScript injection, then writes everything to Google Sheets.
 
 It runs with a single command:
 
@@ -32,9 +32,9 @@ There's also a **spectacle mode** (`--spectacle`) that writes rows one batch at 
 
 ## Key features
 
-- **Multi-source** — Scrapes Petromindo + Jakarta Post (latest + regulations)
-- **Auto-categorization** — Classifies articles into Oil & Gas, Coal, Minerals, Power/Renewables, Regulations, and more
-- **Company detection** — Identifies 80+ Indonesian energy companies in article titles (Pertamina, PLN, Medco, etc.)
+- **Multi-source** — Scrapes Petromindo + Jakarta Post
+- **Auto-categorization** — Classifies articles by sector
+- **Company detection** — Identifies 80+ Indonesian energy companies
 - **Country tagging** — Detects non-Indonesia country mentions for geospatial tracking
 - **Keyword highlighting** — Flags articles matching key terms (LNG, gas, SKK Migas, mandates, etc.)
 - **Top story sorting** — Promotes featured stories to the top with red styling
