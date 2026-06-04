@@ -26,16 +26,19 @@ const { Content } = await render(project);
       ))}
     </div>
 
-    {project.data.video && (
-      <div class="video-wrapper">
-        <video controls autoplay muted loop playsinline>
-          <source src={project.data.video} type="video/mp4" />
-        </video>
+    <div class="project-layout">
+      <div class="project-content">
+        <Content />
       </div>
-    )}
-
-    <div class="project-content">
-      <Content />
+      {project.data.video && (
+        <div class="video-column">
+          <div class="video-wrapper">
+            <video controls autoplay muted loop playsinline>
+              <source src={project.data.video} type="video/mp4" />
+            </video>
+          </div>
+        </div>
+      )}
     </div>
   </div>
 </BaseLayout>

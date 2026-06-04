@@ -197,23 +197,50 @@ section {
   gap: 0.3rem;
 }
 
-.video-wrapper {
-  background: #000;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 2rem;
-  border: 1px solid var(--border);
-}
-
-.video-wrapper video {
-  display: block;
-  width: 100%;
+.project-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
 }
 
 .project-content {
   font-size: 1rem;
   line-height: 1.8;
   color: var(--text);
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.project-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.project-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.project-content::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.video-column {
+  position: sticky;
+  top: 2rem;
+}
+
+.video-wrapper {
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.video-wrapper video {
+  display: block;
+  width: 100%;
 }
 
 .project-content h2 {
@@ -379,6 +406,21 @@ footer .links a:hover {
 
 .mono {
   font-family: var(--mono);
+}
+
+@media (max-width: 768px) {
+  .project-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .project-content {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .video-column {
+    position: static;
+  }
 }
 
 @media (max-width: 640px) {
