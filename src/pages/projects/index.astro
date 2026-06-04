@@ -1,0 +1,40 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+const projects = (await getCollection("projects")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+---
+
+<BaseLayout title="Projects | Petromindo Scraper" description="AI automation projects portfolio.">
+  <div class="page-header container">
+    <a href="/" class="back-link">&larr; Back home</a>
+    <h1>Projects</h1>
+    <p>Things I've built — AI automation, scraping tools, and more.</p>
+  </div>
+
+  <section class="container">
+    {projects.length > 0 ? (
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+        {projects.map((project) => (
+          <a href={`/projects/${project.id}`} class="featured-card" style="margin-bottom: 0;">
+            <div class="card">
+              <h3>{project.data.title}</h3>
+              <p>{project.data.description}</p>
+              <div class="tags">
+                {project.data.tags.map((tag) => (
+                  <span class="tag">{tag}</span>
+                ))}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <div class="empty-state">
+        <p>No projects yet.</p>
+      </div>
+    )}
+  </section>
+</BaseLayout>

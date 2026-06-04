@@ -1,0 +1,41 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection, render } from "astro:content";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+---
+
+<BaseLayout title={`${project.data.title} | Projects`} description={project.data.description}>
+  <div class="project-detail container">
+    <a href="/projects" class="back-link">&larr; All projects</a>
+    <h1>{project.data.title}</h1>
+    <div class="meta">
+      <span class="mono">{project.data.date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
+      <span>•</span>
+      {project.data.tags.map((tag) => (
+        <span class="tag">{tag}</span>
+      ))}
+    </div>
+
+    {project.data.video && (
+      <div class="video-wrapper">
+        <video controls autoplay muted loop playsinline>
+          <source src={project.data.video} type="video/mp4" />
+        </video>
+      </div>
+    )}
+
+    <div class="project-content">
+      <Content />
+    </div>
+  </div>
+</BaseLayout>

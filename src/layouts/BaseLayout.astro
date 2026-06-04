@@ -1,0 +1,47 @@
+---
+import "../styles/global.css";
+
+export interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = "Petromindo Scraper", description = "A targeted newsfeed for Indonesian energy news." } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+  </head>
+  <body>
+    <nav>
+      <div class="container">
+        <a href="/" class="logo">~/projects</a>
+        <div class="links">
+          <a href="/">Home</a>
+          <a href="/projects">Projects</a>
+          <a href="/blog">Blog</a>
+          <a href="/about">About</a>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer>
+      <div class="container">
+        <span>&copy; {new Date().getFullYear()}</span>
+        <div class="links">
+          <a href="mailto:jerhan.w@gmail.com">Email</a>
+          <a href="https://github.com/jerehan69" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

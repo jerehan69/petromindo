@@ -1,0 +1,75 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+const projects = (await getCollection("projects")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+const posts = (await getCollection("blog")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+const featured = projects[0];
+---
+
+<BaseLayout title="Projects" description="A portfolio of AI automation tools and projects.">
+  <div class="hero container">
+    <h1>AI Automation &amp; Tools</h1>
+    <p>A collection of projects at the intersection of automation, web scraping, and practical tooling.</p>
+  </div>
+
+  {featured && (
+    <section class="container">
+      <h2 class="section-title">Featured Project</h2>
+      <a href={`/projects/${featured.id}`} class="featured-card">
+        <div class="card">
+          <div class="label">Latest</div>
+          <h3>{featured.data.title}</h3>
+          <p>{featured.data.description}</p>
+          <div class="tags">
+            {featured.data.tags.map((tag) => (
+              <span class="tag">{tag}</span>
+            ))}
+          </div>
+        </div>
+      </a>
+    </section>
+  )}
+
+  {projects.length > 1 && (
+    <section class="container">
+      <h2 class="section-title">All Projects</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+        {projects.slice(1).map((project) => (
+          <a href={`/projects/${project.id}`} class="featured-card" style="margin-bottom: 0;">
+            <div class="card">
+              <h3>{project.data.title}</h3>
+              <p>{project.data.description}</p>
+              <div class="tags">
+                {project.data.tags.slice(0, 3).map((tag) => (
+                  <span class="tag">{tag}</span>
+                ))}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {posts.length > 0 && (
+    <section class="container">
+      <h2 class="section-title">Latest Blog Posts</h2>
+      <div class="blog-list">
+        {posts.slice(0, 3).map((post) => (
+          <a href={`/blog/${post.id}`} class="blog-post">
+            <div class="card">
+              <span class="date">{post.data.date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
+              <h3>{post.data.title}</h3>
+              <p>{post.data.description}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+</BaseLayout>
