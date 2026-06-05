@@ -1,0 +1,322 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const SHEET_ID = "1-gWUmtaWJvqzEWcFFiebhoAztZ8BpU9XY4qiOfUFFLg";
+
+interface Article {
+  date: string;
+  time: string;
+  source: string;
+  company: string;
+  product: string;
+  country: string;
+  title: string;
+  url: string;
+}
+
+function extractUrl(formula: string): string {
+  const m = formula.match(/HYPERLINK\("([^"]+)"/);
+  return m ? m[1] : "";
+}
+
+function cleanTitle(title: string): string {
+  return title.replace(/^Opinion\w+/, "Opinion: ").replace(/^Analysis\w+/, "Analysis: ");
+}
+
+async function fetchSheet(): Promise<{ articles: Article[]; updated: string }> {
+  const tokenResp = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    body: new URLSearchParams({
+      client_id: import.meta.env.GOOGLE_CLIENT_ID,
+      client_secret: import.meta.env.GOOGLE_CLIENT_SECRET,
+      refresh_token: import.meta.env.GOOGLE_REFRESH_TOKEN,
+      grant_type: "refresh_token",
+    }),
+  });
+  const { access_token } = await tokenResp.json();
+
+  const resp = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/News%20Feed?valueRenderOption=FORMULA&majorDimension=ROWS`,
+    { headers: { Authorization: `Bearer ${access_token}` } }
+  );
+  const data = await resp.json();
+  const rows: string[][] = data.values || [];
+
+  let updated = "";
+  if (rows.length > 0 && rows[0].length > 6) {
+    updated = rows[0][6].replace("Updated: ", "");
+  }
+
+  const articles: Article[] = [];
+  for (let i = 2; i < rows.length; i++) {
+    const r = rows[i];
+    if (r.length < 8) continue;
+    articles.push({
+      date: r[0] || "",
+      time: r[1] || "",
+      source: r[2] || "",
+      company: r[3] || "",
+      product: r[4] || "",
+      country: r[5] || "",
+      title: cleanTitle(r[6] || ""),
+      url: extractUrl(r[7] || ""),
+    });
+  }
+
+  return { articles, updated };
+}
+
+const { articles, updated } = await fetchSheet();
+
+const sourceColors: Record<string, string> = {
+  Bloomberg: "#00d4ff",
+  FT: "#fff1cc",
+  Twitter: "#1d9bf0",
+};
+---
+
+<BaseLayout title="News Feed" description="Curated energy & market news from Bloomberg, FT, and Twitter.">
+  <div class="page-header container">
+    <h1>News Feed</h1>
+    <p>Curated articles from Bloomberg, Financial Times, and Twitter &middot; <span class="updated">Updated {updated}</span></p>
+  </div>
+
+  <section class="container">
+    <div class="source-summary">
+      {Object.entries(sourceColors).map(([name]) => {
+        const count = articles.filter((a) => a.source === name).length;
+        return (
+          <span class="source-pill" style={`--pill-color: ${sourceColors[name]}`}>
+            {name} <span class="count">{count}</span>
+          </span>
+        );
+      })}
+      <span class="total-pill">{articles.length} articles</span>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th class="col-source">Source</th>
+            <th class="col-title">Title</th>
+            <th>Company</th>
+            <th>Product</th>
+            <th>Country</th>
+          </tr>
+        </thead>
+        <tbody>
+          {articles.map((article) => (
+            <tr>
+              <td class="cell-date">
+                <span class="date-text">{article.date}</span>
+                <span class="time-text">{article.time}</span>
+              </td>
+              <td>
+                {article.url ? (
+                  <a href={article.url} target="_blank" rel="noopener" class="source-badge" style={`--source-color: ${sourceColors[article.source] || "var(--accent)"}`}>
+                    {article.source}
+                  </a>
+                ) : (
+                  <span class="source-badge" style={`--source-color: ${sourceColors[article.source] || "var(--accent)"}`}>
+                    {article.source}
+                  </span>
+                )}
+              </td>
+              <td class="cell-title">
+                {article.url ? (
+                  <a href={article.url} target="_blank" rel="noopener" class="title-link">{article.title}</a>
+                ) : (
+                  <span>{article.title}</span>
+                )}
+              </td>
+              <td class="cell-company">{article.company || "-"}</td>
+              <td><span class="product-tag">{article.product || "-"}</span></td>
+              <td class="cell-country">{article.country || ""}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .updated {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+  }
+
+  .source-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+  }
+
+  .source-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid var(--pill-color);
+    color: var(--pill-color);
+    background: color-mix(in srgb, var(--pill-color) 8%, transparent);
+  }
+
+  .source-pill .count {
+    background: var(--pill-color);
+    color: var(--bg);
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .total-pill {
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  thead {
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+  }
+
+  th {
+    text-align: left;
+    padding: 0.75rem 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover td {
+    background: rgba(0, 212, 255, 0.03);
+  }
+
+  .col-source {
+    width: 90px;
+  }
+
+  .col-title {
+    min-width: 280px;
+  }
+
+  .cell-date {
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+
+  .date-text {
+    display: block;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.78rem;
+  }
+
+  .time-text {
+    display: block;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+  }
+
+  .source-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--source-color);
+    border: 1px solid var(--source-color);
+    background: color-mix(in srgb, var(--source-color) 8%, transparent);
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .source-badge:hover {
+    background: color-mix(in srgb, var(--source-color) 20%, transparent);
+  }
+
+  .cell-title {
+    min-width: 200px;
+  }
+
+  .title-link {
+    color: var(--text);
+    text-decoration: none;
+    transition: color 0.15s;
+    line-height: 1.4;
+  }
+
+  .title-link:hover {
+    color: var(--accent);
+  }
+
+  .cell-company {
+    color: var(--accent-dim);
+    font-family: var(--mono);
+    font-size: 0.78rem;
+  }
+
+  .product-tag {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .cell-country {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 768px) {
+    .col-source { width: auto; }
+    .col-title { min-width: 0; }
+    table { font-size: 0.78rem; }
+    th:nth-child(4), td:nth-child(4),
+    th:nth-child(5), td:nth-child(5) { display: none; }
+  }
+
+  @media (max-width: 500px) {
+    th:nth-child(6), td:nth-child(6) { display: none; }
+  }
+</style>
