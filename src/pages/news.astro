@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 
-const SHEET_ID = "1-gWUmtaWJvqzEWcFFiebhoAztZ8BpU9XY4qiOfUFFLg";
+const SHEET_ID = import.meta.env.SHEET_ID;
 
 interface Article {
   date: string;
@@ -35,18 +35,36 @@ function isTopStory(article: Article): boolean {
 }
 
 function toSGT(time: string, source: string): string {
-  if (!time || !source) return time;
-  const parts = time.split(":");
-  if (parts.length < 2) return time;
-  let h = parseInt(parts[0], 10);
-  const m = parts[1];
-  if (isNaN(h)) return time;
+  if (!time || !source) return String(time ?? "");
+  let h: number, m: string;
+  if (typeof time === "number" || /^\d+\.?\d*$/.test(String(time).trim())) {
+    const serial = typeof time === "number" ? time : parseFloat(time);
+    const totalMinutes = Math.round(serial * 24 * 60);
+    h = Math.floor(totalMinutes / 60);
+    m = String(totalMinutes % 60).padStart(2, "0");
+  } else {
+    const parts = String(time).split(":");
+    if (parts.length < 2) return String(time);
+    h = parseInt(parts[0], 10);
+    m = parts[1];
+    if (isNaN(h)) return String(time);
+  }
   if (source === "FT") {
     h = (h + 7) % 24;
   } else if (source === "Twitter") {
     h = (h + 8) % 24;
   }
   return `${String(h).padStart(2, "0")}:${m}`;
+}
+
+function formatDate(date: string): string {
+  if (!date) return "";
+  if (typeof date === "number" || /^\d+\.?\d*$/.test(String(date).trim())) {
+    const serial = typeof date === "number" ? date : parseFloat(date);
+    const d = new Date(1899, 11, 30 + serial);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+  return String(date);
 }
 
 async function fetchSheet(): Promise<{ articles: Article[]; total: string; updated: string }> {
@@ -96,7 +114,7 @@ async function fetchSheet(): Promise<{ articles: Article[]; total: string; updat
 
 function sortKey(article: Article): string {
   const sgtTime = toSGT(article.time, article.source);
-  return `${article.date}T${sgtTime}`;
+  return `${formatDate(article.date)}T${sgtTime}`;
 }
 
 const { articles, total, updated } = await fetchSheet();
@@ -135,7 +153,7 @@ const sourceLabels: Record<string, string> = {
             const rowClass = hl || (idx % 2 === 1 ? "alt" : "");
             return (
             <tr class={rowClass}>
-              <td class="cell-date">{article.date}</td>
+              <td class="cell-date">{formatDate(article.date)}</td>
               <td class="cell-time">{toSGT(article.time, article.source)}</td>
               <td class="cell-source">{sourceLabels[article.source] || article.source}</td>
               <td class="cell-title">
