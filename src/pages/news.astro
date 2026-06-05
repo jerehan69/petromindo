@@ -23,15 +23,15 @@ function cleanTitle(title: string): string {
   return title.replace(/^Opinion\w+/, "Opinion: ").replace(/^Analysis\w+/, "Analysis: ");
 }
 
-const KEYWORDS = ["lng", "gas", "oil", "coal", "nuclear", "lithium", "gold", "iron ore", "copper"];
+const KEYWORDS = ["oil", "gas", "lng"];
 
 function hasKeyword(article: Article): boolean {
-  const text = `${article.title} ${article.product}`.toLowerCase();
+  const text = article.title.toLowerCase();
   return KEYWORDS.some((kw) => text.includes(kw));
 }
 
-function isTopStory(article: Article): boolean {
-  return article.company.includes("Trump");
+function isTrumpStory(article: Article): boolean {
+  return article.title.toLowerCase().includes("trump");
 }
 
 function toSGT(time: string, source: string): string {
@@ -85,7 +85,7 @@ async function fetchSheet(): Promise<{ articles: Article[]; total: string; updat
   let updated = "";
   if (rows.length > 0) {
     total = rows[0][0] || "";
-    updated = (rows[0][6] || "").replace("Updated: ", "");
+    updated = (rows[0][2] || "").replace("Updated: ", "");
   }
 
   const articles: Article[] = [];
@@ -144,7 +144,7 @@ const sourceLabels: Record<string, string> = {
         </thead>
         <tbody>
           {articles.map((article, idx) => {
-            const hl = hasKeyword(article) ? "hl-yellow" : isTopStory(article) ? "hl-pink" : "";
+            const hl = isTrumpStory(article) ? "hl-red" : hasKeyword(article) ? "hl-yellow" : "";
             const rowClass = hl || (idx % 2 === 1 ? "alt" : "");
             return (
             <tr class={rowClass}>
@@ -239,11 +239,11 @@ const sourceLabels: Record<string, string> = {
   }
 
   tr.hl-yellow td {
-    background: rgba(255, 255, 200, 0.15);
+    background: rgba(255, 255, 200, 0.25);
   }
 
-  tr.hl-pink td {
-    background: rgba(255, 200, 200, 0.12);
+  tr.hl-red td {
+    background: rgba(255, 180, 180, 0.25);
   }
 
   tr:hover td {
