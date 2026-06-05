@@ -23,6 +23,32 @@ function cleanTitle(title: string): string {
   return title.replace(/^Opinion\w+/, "Opinion: ").replace(/^Analysis\w+/, "Analysis: ");
 }
 
+const KEYWORDS = ["lng", "gas", "oil", "coal", "nuclear", "lithium", "gold", "iron ore", "copper"];
+
+function hasKeyword(article: Article): boolean {
+  const text = `${article.title} ${article.product}`.toLowerCase();
+  return KEYWORDS.some((kw) => text.includes(kw));
+}
+
+function isTopStory(article: Article): boolean {
+  return article.company.includes("Trump");
+}
+
+function toSGT(time: string, source: string): string {
+  if (!time || !source) return time;
+  const parts = time.split(":");
+  if (parts.length < 2) return time;
+  let h = parseInt(parts[0], 10);
+  const m = parts[1];
+  if (isNaN(h)) return time;
+  if (source === "FT") {
+    h = (h + 7) % 24;
+  } else if (source === "Twitter") {
+    h = (h + 8) % 24;
+  }
+  return `${String(h).padStart(2, "0")}:${m}`;
+}
+
 async function fetchSheet(): Promise<{ articles: Article[]; total: string; updated: string }> {
   const tokenResp = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -98,10 +124,13 @@ const sourceLabels: Record<string, string> = {
           </tr>
         </thead>
         <tbody>
-          {articles.map((article, idx) => (
-            <tr class={idx % 2 === 1 ? "alt" : ""}>
+          {articles.map((article, idx) => {
+            const hl = hasKeyword(article) ? "hl-yellow" : isTopStory(article) ? "hl-pink" : "";
+            const rowClass = hl || (idx % 2 === 1 ? "alt" : "");
+            return (
+            <tr class={rowClass}>
               <td class="cell-date">{article.date}</td>
-              <td class="cell-time">{article.time}</td>
+              <td class="cell-time">{toSGT(article.time, article.source)}</td>
               <td class="cell-source">{sourceLabels[article.source] || article.source}</td>
               <td class="cell-title">
                 <a href={article.url} target="_blank" rel="noopener" class="title-link">{article.title}</a>
@@ -110,7 +139,8 @@ const sourceLabels: Record<string, string> = {
               <td class="cell-product">{article.product || ""}</td>
               <td class="cell-country">{article.country || ""}</td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -189,8 +219,16 @@ const sourceLabels: Record<string, string> = {
     background: rgba(255, 255, 255, 0.015);
   }
 
+  tr.hl-yellow td {
+    background: rgba(255, 255, 200, 0.15);
+  }
+
+  tr.hl-pink td {
+    background: rgba(255, 200, 200, 0.12);
+  }
+
   tr:hover td {
-    background: rgba(0, 212, 255, 0.04);
+    background: rgba(0, 212, 255, 0.04) !important;
   }
 
   .col-date { width: 100px; }
