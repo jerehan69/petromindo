@@ -49,11 +49,6 @@ function toSGT(time: string, source: string): string {
     m = parts[1];
     if (isNaN(h)) return String(time);
   }
-  if (source === "FT") {
-    h = (h + 7) % 24;
-  } else if (source === "Twitter") {
-    h = (h + 8) % 24;
-  }
   return `${String(h).padStart(2, "0")}:${m}`;
 }
 
