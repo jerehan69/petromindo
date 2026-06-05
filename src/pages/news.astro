@@ -95,11 +95,11 @@ async function fetchSheet(): Promise<{ articles: Article[]; total: string; updat
     articles.push({
       date: r[0] || "",
       time: r[1] || "",
-      source: r[2] || "",
-      company: r[3] || "",
-      product: r[4] || "",
-      country: r[5] || "",
-      title: cleanTitle(r[6] || ""),
+      company: r[2] || "",
+      product: r[3] || "",
+      country: r[4] || "",
+      title: cleanTitle(r[5] || ""),
+      source: r[6] || "",
       url: extractUrl(r[7] || ""),
     });
   }
@@ -135,11 +135,11 @@ const sourceLabels: Record<string, string> = {
           <tr>
             <th class="col-date">Date</th>
             <th>Time</th>
-            <th class="col-source">Source</th>
-            <th class="col-title">Title</th>
             <th>Company</th>
             <th>Product</th>
             <th>Country</th>
+            <th class="col-title">Title</th>
+            <th class="col-source">Source</th>
           </tr>
         </thead>
         <tbody>
@@ -150,13 +150,13 @@ const sourceLabels: Record<string, string> = {
             <tr class={rowClass}>
               <td class="cell-date">{formatDate(article.date)}</td>
               <td class="cell-time">{toSGT(article.time, article.source)}</td>
-              <td class="cell-source">{sourceLabels[article.source] || article.source}</td>
-              <td class="cell-title">
-                <a href={article.url} target="_blank" rel="noopener" class="title-link">{article.title}</a>
-              </td>
               <td class="cell-company">{article.company || ""}</td>
               <td class="cell-product">{article.product || ""}</td>
               <td class="cell-country">{article.country || ""}</td>
+              <td class="cell-title">
+                <a href={article.url} target="_blank" rel="noopener" class="title-link">{article.title}</a>
+              </td>
+              <td class="cell-source">{sourceLabels[article.source] || article.source}</td>
             </tr>
             );
           })}
