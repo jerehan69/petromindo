@@ -94,7 +94,13 @@ async function fetchSheet(): Promise<{ articles: Article[]; total: string; updat
   return { articles, total, updated };
 }
 
+function sortKey(article: Article): string {
+  const sgtTime = toSGT(article.time, article.source);
+  return `${article.date}T${sgtTime}`;
+}
+
 const { articles, total, updated } = await fetchSheet();
+articles.sort((a, b) => sortKey(b).localeCompare(sortKey(a)));
 
 const sourceLabels: Record<string, string> = {
   Bloomberg: "Bloomberg",
