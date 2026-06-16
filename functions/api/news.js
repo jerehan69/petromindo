@@ -1,58 +1,43 @@
 /**
  * Cloudflare Pages Function — proxies Google Sheet data to the browser.
- * Simplified: uses API key restricted to the sheet, no OAuth needed.
  */
 
+async function getAccessToken(env) {
+  const resp = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `client_id=${encodeURIComponent(env.GOOGLE_CLIENT_ID)}&client_secret=${encodeURIComponent(env.GOOGLE_CLIENT_SECRET)}&refresh_token=${encodeURIComponent(env.GOOGLE_REFRESH_TOKEN)}&grant_type=refresh_token`,
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`OAuth ${resp.status}: ${text.substring(0, 300)}`);
+  }
+  const data = await resp.json();
+  if (!data.access_token) throw new Error(`No access_token: ${JSON.stringify(data)}`);
+  return data.access_token;
+}
+
 export async function onRequest(context) {
-  const { SHEET_ID } = context.env;
+  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, SHEET_ID } = context.env;
+  const missing = [];
+  if (!GOOGLE_CLIENT_ID) missing.push("GOOGLE_CLIENT_ID");
+  if (!GOOGLE_CLIENT_SECRET) missing.push("GOOGLE_CLIENT_SECRET");
+  if (!GOOGLE_REFRESH_TOKEN) missing.push("GOOGLE_REFRESH_TOKEN");
+  if (!SHEET_ID) missing.push("SHEET_ID");
+  if (missing.length > 0) {
+    return new Response(JSON.stringify({ error: "Missing: " + missing.join(", ") }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   try {
-    // Try with API key first (simpler, no OAuth)
-    const apiKey = context.env.GOOGLE_CLIENT_ID; // just for testing
-    const tokenResp = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: context.env.GOOGLE_CLIENT_ID,
-        client_secret: context.env.GOOGLE_CLIENT_SECRET,
-        refresh_token: context.env.GOOGLE_REFRESH_TOKEN,
-        grant_type: "refresh_token",
-      }),
-    });
-
-    if (!tokenResp.ok) {
-      const text = await tokenResp.text();
-      return new Response(JSON.stringify({
-        error: "OAuth failed",
-        status: tokenResp.status,
-        detail: text.substring(0, 500),
-        hasKeys: {
-          clientId: !!context.env.GOOGLE_CLIENT_ID,
-          clientSecret: !!context.env.GOOGLE_CLIENT_SECRET,
-          refreshToken: !!context.env.GOOGLE_REFRESH_TOKEN,
-          sheetId: !!context.env.SHEET_ID,
-        }
-      }), {
-        status: 502,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const tokenData = await tokenResp.json();
-    const access_token = tokenData.access_token;
-
-    if (!access_token) {
-      return new Response(JSON.stringify({ error: "No access token", data: tokenData }), {
-        status: 502,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+    const access_token = await getAccessToken(context.env);
 
     const sheetResp = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Feed?valueRenderOption=FORMULA&majorDimension=ROWS`,
       { headers: { Authorization: `Bearer ${access_token}` } }
     );
-
     if (!sheetResp.ok) {
       const text = await sheetResp.text();
       return new Response(JSON.stringify({ error: "Sheet fetch failed", status: sheetResp.status, detail: text.substring(0, 500) }), {
