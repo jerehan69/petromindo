@@ -18,76 +18,17 @@ const { Content } = await render(project);
   <div class="project-detail container">
     <a href="/projects" class="back-link">&larr; All projects</a>
     <h1>{project.data.title}</h1>
-    <div class="meta">
-      <span class="mono">{project.data.date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
-      <span>&bull;</span>
-      {project.data.tags.map((tag) => (
-        <span class="tag">{tag}</span>
-      ))}
-    </div>
 
     {project.data.video && (
-      <div class="video-stage" id="video-stage">
-        <div class="video-hero" id="video-hero">
-          <video controls autoplay muted playsinline id="project-video">
+      <div class="video-stage">
+        <div class="video-hero">
+          <video controls muted playsinline id="project-video" onended="this.style.opacity='0.5'">
             <source src={project.data.video} type="video/mp4" />
           </video>
         </div>
       </div>
     )}
-
-    <div class="project-content" id="text-content">
-      <Content />
-    </div>
   </div>
 </BaseLayout>
 
-<script>
-  (function() {
-    const hero = document.getElementById('video-hero');
-    const stage = document.getElementById('video-stage');
-    const text = document.getElementById('text-content');
-    if (!hero || !stage || !text) return;
 
-    let isFixed = false;
-    let naturalHeight = 0;
-    let isTransitioning = false;
-
-    function update() {
-      const rect = stage.getBoundingClientRect();
-      const shouldFix = rect.bottom < 80;
-
-      if (shouldFix !== isFixed && !isTransitioning) {
-        isFixed = shouldFix;
-        const video = document.getElementById('project-video');
-
-        if (shouldFix) {
-          naturalHeight = stage.offsetHeight;
-          stage.style.height = naturalHeight + 'px';
-          stage.offsetHeight;
-          stage.style.transition = 'height 0.5s ease';
-          stage.style.height = '0px';
-          hero.classList.add('minimized');
-          text.classList.add('video-minimized');
-          setTimeout(() => { stage.style.transition = ''; isTransitioning = false; }, 550);
-          isTransitioning = true;
-        } else {
-          stage.style.transition = 'height 0.5s ease';
-          stage.style.height = naturalHeight + 'px';
-          hero.classList.remove('minimized');
-          text.classList.remove('video-minimized');
-          if (video) { video.currentTime = 0; video.play(); }
-          setTimeout(() => {
-            stage.style.height = '';
-            stage.style.transition = '';
-            isTransitioning = false;
-          }, 550);
-          isTransitioning = true;
-        }
-      }
-    }
-
-    window.addEventListener('scroll', update, { passive: true });
-    update();
-  })();
-</script>
