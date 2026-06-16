@@ -165,6 +165,7 @@ try {
       <span class="stats-count" id="stats-count">{initialArticles.length} posts</span>
       <span class="stats-indicator" id="live-indicator">● live</span>
     </div>
+    <div class="filter-bar" id="filter-bar"></div>
 
     <div class="table-wrapper">
       <table>
@@ -247,16 +248,42 @@ function formatTime(time) {
   return time.substring(0, 5);
 }
 
+let allArticles = [];
+let filterCompany = "";
+
 function renderRows(articles) {
   const tbody = document.getElementById("news-body");
   const stats = document.getElementById("stats-count");
-  stats.textContent = articles.length + " posts";
-  tbody.innerHTML = articles.map((article, idx) => {
+  const filterBar = document.getElementById("filter-bar");
+
+  // Apply company filter if set
+  const filtered = filterCompany
+    ? articles.filter(a => {
+        const companies = filterCompanies(a.companies, a.content);
+        return companies.split(", ").some(c => c === filterCompany);
+      })
+    : articles;
+
+  stats.textContent = filtered.length + " posts" + (filterCompany ? ` for ${filterCompany}` : "");
+
+  // Show/hide filter bar
+  if (filterCompany) {
+    filterBar.style.display = "flex";
+    filterBar.innerHTML = `
+      <span class="filter-label">Filter: <strong>${esc(filterCompany)}</strong></span>
+      <button class="filter-clear" onclick="clearFilter()">×</button>
+    `;
+  } else {
+    filterBar.style.display = "none";
+  }
+
+  tbody.innerHTML = filtered.map((article, idx) => {
     const hl = isTrumpStory(article) ? "hl-red" : hasKeyword(article) ? "hl-yellow" : "";
     const rowClass = hl || (idx % 2 === 1 ? "alt" : "");
     const src = article.account || article.username || "";
     const url = article.url;
     const content = article.content;
+    const companies = filterCompanies(article.companies, article.content);
     return `<tr class="${rowClass}">
       <td class="cell-date">${esc(article.date)}</td>
       <td class="cell-time">${esc(formatTime(article.time))}</td>
@@ -264,12 +291,39 @@ function renderRows(articles) {
         ? `<a href="${esc(url)}" target="_blank" rel="noopener" class="title-link">${esc(content)}</a>`
         : `<span class="title-text">${esc(content)}</span>`}
       </td>
-      <td class="cell-company">${esc(filterCompanies(article.companies, article.content))}</td>
+      <td class="cell-company filterable" data-company="${esc(companies)}" onclick="clickCompany('${esc(companies)}')">${esc(companies)}</td>
       <td class="cell-country">${esc(article.country || "")}</td>
       <td class="cell-source">${esc(src)}</td>
     </tr>`;
   }).join("");
+
+  // Highlight active filter in table
+  if (filterCompany) {
+    tbody.querySelectorAll(".filterable").forEach(td => {
+      const companies = td.dataset.company.split(", ");
+      if (companies.includes(filterCompany)) {
+        td.classList.add("filter-active");
+      }
+    });
+  }
 }
+
+function clickCompany(companies) {
+  const list = companies.split(", ");
+  // If clicking the same company, clear filter; otherwise filter by company
+  if (list.includes(filterCompany)) {
+    filterCompany = "";
+  } else {
+    // If multiple companies, pick the first one that's not already filtered
+    filterCompany = list[0];
+  }
+  renderRows(allArticles);
+}
+
+window.clearFilter = function() {
+  filterCompany = "";
+  renderRows(allArticles);
+};
 
 function esc(s) {
   const div = document.createElement("div");
@@ -283,15 +337,42 @@ async function fetchLive() {
     if (!resp.ok) return;
     const data = await resp.json();
     if (data.articles && data.articles.length > 0) {
-      renderRows(data.articles);
+      allArticles = data.articles;
+      renderRows(allArticles);
     }
   } catch (_) {
     // silently fall back to build-time data
   }
 }
 
-// Fetch live data on page load, then every 60 seconds
-fetchLive();
+// Init: populate allArticles from the build-time data, then attempt live fetch
+(function() {
+  // Extract build-time articles from the DOM
+  const tbody = document.getElementById("news-body");
+  if (tbody && tbody.children.length > 0) {
+    const rows = tbody.querySelectorAll("tr");
+    allArticles = [];
+    rows.forEach(row => {
+      const tds = row.querySelectorAll("td");
+      if (tds.length >= 6) {
+        allArticles.push({
+          date: tds[0].textContent,
+          time: tds[1].textContent,
+          content: tds[2].textContent,
+          companies: tds[3].textContent,
+          country: tds[4].textContent,
+          account: tds[5].textContent,
+          url: tds[2].querySelector("a")?.href || "",
+        });
+      }
+    });
+    // Re-render with clickable companies
+    renderRows(allArticles);
+  }
+  // Fetch live data
+  fetchLive();
+  setInterval(fetchLive, 60000);
+})();
 setInterval(fetchLive, 60000);
 </script>
 
@@ -325,6 +406,57 @@ setInterval(fetchLive, 60000);
     color: var(--accent);
     font-family: var(--mono);
     margin-left: auto;
+  }
+
+  .filter-bar {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    font-size: 0.82rem;
+    font-family: var(--font);
+  }
+
+  .filter-label {
+    color: var(--muted);
+  }
+
+  .filter-label strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .filter-clear {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1rem 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.2;
+  }
+
+  .filter-clear:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  td.filterable {
+    cursor: pointer;
+    position: relative;
+  }
+
+  td.filterable:hover {
+    text-decoration: underline;
+  }
+
+  td.filter-active {
+    background: rgba(230, 81, 0, 0.12) !important;
   }
 
   .table-wrapper {
