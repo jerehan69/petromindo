@@ -227,6 +227,10 @@ setInterval(fetchLive, 60000);
     --text: #0a0a0f;
     --muted: #555566;
   }
+
+  a:hover {
+    color: var(--accent);
+  }
 </style>
 
 <style>
@@ -338,7 +342,7 @@ setInterval(fetchLive, 60000);
     color: var(--muted);
   }
 
-  .title-link {
+  :global(.title-link) {
     color: var(--text);
     text-decoration: none;
     transition: color 0.15s;
@@ -347,11 +351,11 @@ setInterval(fetchLive, 60000);
     text-overflow: ellipsis;
   }
 
-  .title-link:hover {
-    color: #4488ff;
+  :global(.title-link:hover) {
+    color: #4488ff !important;
   }
 
-  .title-text {
+  :global(.title-text) {
     color: var(--text);
   }
 
