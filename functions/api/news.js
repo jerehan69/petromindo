@@ -1,20 +1,12 @@
 /**
  * Cloudflare Pages Function — proxies Google Sheet data to the browser.
- *
- * Environment variables (set in Cloudflare Pages dashboard):
- *   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, SHEET_ID
- *
- * The function:
- *   1. Gets an OAuth2 access token using the refresh token
- *   2. Fetches the Feed sheet via the Google Sheets API
- *   3. Returns parsed JSON (no sensitive tokens exposed)
  */
 
 export async function onRequest(context) {
   const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, SHEET_ID } = context.env;
 
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REFRESH_TOKEN || !SHEET_ID) {
-    return new Response(JSON.stringify({ error: "Missing environment variables" }), {
+    return new Response(JSON.stringify({ error: "Missing environment variables", keys: Object.keys(context.env) }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
@@ -35,13 +27,21 @@ export async function onRequest(context) {
 
     if (!tokenResp.ok) {
       const text = await tokenResp.text();
-      return new Response(JSON.stringify({ error: "OAuth failed", detail: text }), {
+      return new Response(JSON.stringify({ error: "OAuth failed", status: tokenResp.status, detail: text }), {
         status: 502,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    const { access_token } = await tokenResp.json();
+    const tokenData = await tokenResp.json();
+    const access_token = tokenData.access_token;
+
+    if (!access_token) {
+      return new Response(JSON.stringify({ error: "No access token in response", data: tokenData }), {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     // Step 2: Fetch sheet data
     const sheetResp = await fetch(
@@ -51,7 +51,7 @@ export async function onRequest(context) {
 
     if (!sheetResp.ok) {
       const text = await sheetResp.text();
-      return new Response(JSON.stringify({ error: "Sheet fetch failed", detail: text }), {
+      return new Response(JSON.stringify({ error: "Sheet fetch failed", status: sheetResp.status, detail: text.substring(0, 500) }), {
         status: 502,
         headers: { "Content-Type": "application/json" },
       });
@@ -60,7 +60,7 @@ export async function onRequest(context) {
     const data = await sheetResp.json();
     const rows = data.values || [];
 
-    // Step 3: Parse into article objects
+    // Parse into article objects
     const articles = [];
     for (let i = 1; i < rows.length; i++) {
       const r = rows[i];
@@ -89,7 +89,7 @@ export async function onRequest(context) {
       },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: err.message, stack: err.stack }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
