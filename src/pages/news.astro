@@ -20,6 +20,13 @@ interface Article {
 
 const KEYWORDS = ["oil", "gas", "lng", "energy", "coal"];
 
+const COUNTRY_NAMES = new Set(["CHINA", "IRAN", "JAPAN", "KOREA", "QATAR", "UK", "USA"]);
+
+function filterCompanies(val: string): string {
+  if (!val) return "";
+  return val.split(", ").filter(c => !COUNTRY_NAMES.has(c)).join(", ");
+}
+
 function hasKeyword(article: Article): boolean {
   const text = (article.content + " " + article.companies).toLowerCase();
   return KEYWORDS.some((kw) => text.includes(kw));
@@ -58,7 +65,7 @@ async function fetchSheet(): Promise<Article[]> {
     const r = rows[i];
     if (r.length < 12) continue;
     articles.push({
-      companies: r[0] || "",
+      companies: filterCompanies(r[0] || ""),
       country: r[1] || "",
       date: r[2] || "",
       time: r[3] || "",
@@ -132,6 +139,12 @@ try {
 
 <script>
 const KEYWORDS = ["oil", "gas", "lng", "energy", "coal"];
+const COUNTRY_NAMES = new Set(["CHINA", "IRAN", "JAPAN", "KOREA", "QATAR", "UK", "USA"]);
+
+function filterCompanies(val) {
+  if (!val) return "";
+  return val.split(", ").filter(c => !COUNTRY_NAMES.has(c)).join(", ");
+}
 
 function hasKeyword(article) {
   const text = (article.content + " " + article.companies).toLowerCase();
@@ -164,7 +177,7 @@ function renderRows(articles) {
         ? `<a href="${esc(url)}" target="_blank" rel="noopener" class="title-link">${esc(content)}</a>`
         : `<span class="title-text">${esc(content)}</span>`}
       </td>
-      <td class="cell-company">${esc(article.companies || "")}</td>
+      <td class="cell-company">${esc(filterCompanies(article.companies))}</td>
       <td class="cell-country">${esc(article.country || "")}</td>
       <td class="cell-source">${esc(src)}</td>
     </tr>`;
