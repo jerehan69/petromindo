@@ -76,7 +76,12 @@ async function fetchSheet(): Promise<Article[]> {
   return articles;
 }
 
-const initialArticles = await fetchSheet();
+let initialArticles: Article[] = [];
+try {
+  initialArticles = await fetchSheet();
+} catch (e) {
+  console.error("Build-time sheet fetch failed:", e);
+}
 ---
 
 <BaseLayout title="News Feed" description="Curated market & news feed.">
