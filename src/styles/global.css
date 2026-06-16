@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg: #ffffff;
+  --bg: #faf8f5;
   --surface: #ffffff;
   --card: #ffffff;
-  --border: #d0d0d8;
-  --accent: #004499;
-  --accent-dim: #3377bb;
-  --text: #0a0a0f;
-  --muted: #555566;
+  --border: #e0d8d0;
+  --accent: #e65100;
+  --accent-dim: #ff8a50;
+  --text: #1a1a1a;
+  --muted: #8a7e72;
   --font: 'Inter', system-ui, sans-serif;
   --mono: 'JetBrains Mono', monospace;
 }
