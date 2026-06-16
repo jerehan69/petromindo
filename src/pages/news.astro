@@ -159,7 +159,7 @@ try {
 }
 ---
 
-<BaseLayout title="News Feed" description="Curated market & news feed.">
+<BaseLayout title="News Feed" description="Curated market & news feed." activePage="news">
   <div class="sheet-container">
     <div class="stats-row">
       <span class="stats-count" id="stats-count">{initialArticles.length} posts</span>
@@ -382,11 +382,11 @@ setInterval(fetchLive, 60000);
   }
 
   :global(tr.hl-yellow td) {
-    background: rgba(230, 81, 0, 0.08);
+    background: rgba(230, 81, 0, 0.18);
   }
 
   :global(tr.hl-red td) {
-    background: rgba(200, 50, 50, 0.10);
+    background: rgba(180, 40, 40, 0.20);
   }
 
   :global(tr:hover td) {

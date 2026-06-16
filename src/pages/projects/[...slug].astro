@@ -14,7 +14,7 @@ const { project } = Astro.props;
 const { Content } = await render(project);
 ---
 
-<BaseLayout title={`${project.data.title} | Projects`} description={project.data.description}>
+<BaseLayout title={`${project.data.title} | Projects`} description={project.data.description} activePage="projects">
   <div class="project-detail container">
     <a href="/projects" class="back-link">&larr; All projects</a>
     <h1>{project.data.title}</h1>
