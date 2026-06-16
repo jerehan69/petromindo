@@ -308,17 +308,15 @@ function renderRows(articles) {
   }
 }
 
-function clickCompany(companies) {
+window.clickCompany = function(companies) {
   const list = companies.split(", ");
-  // If clicking the same company, clear filter; otherwise filter by company
   if (list.includes(filterCompany)) {
     filterCompany = "";
   } else {
-    // If multiple companies, pick the first one that's not already filtered
     filterCompany = list[0];
   }
   renderRows(allArticles);
-}
+};
 
 window.clearFilter = function() {
   filterCompany = "";
