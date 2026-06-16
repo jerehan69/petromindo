@@ -4,65 +4,37 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 const SHEET_ID = import.meta.env.SHEET_ID;
 
 interface Article {
+  companies: string;
+  country: string;
   date: string;
   time: string;
-  source: string;
-  company: string;
-  product: string;
-  country: string;
-  title: string;
+  content: string;
+  account: string;
+  username: string;
+  likes: string;
+  retweets: string;
+  replies: string;
+  views: string;
   url: string;
 }
 
-function extractUrl(formula: string): string {
-  const m = formula.match(/HYPERLINK\("([^"]+)"/);
-  return m ? m[1] : "";
-}
-
-function cleanTitle(title: string): string {
-  return title.replace(/^Opinion\w+/, "Opinion: ").replace(/^Analysis\w+/, "Analysis: ");
-}
-
-const KEYWORDS = ["oil", "gas", "lng"];
+const KEYWORDS = ["oil", "gas", "lng", "energy", "coal"];
 
 function hasKeyword(article: Article): boolean {
-  const text = article.title.toLowerCase();
+  const text = (article.content + " " + article.companies).toLowerCase();
   return KEYWORDS.some((kw) => text.includes(kw));
 }
 
 function isTrumpStory(article: Article): boolean {
-  return article.title.toLowerCase().includes("trump");
+  return article.content.toLowerCase().includes("trump");
 }
 
-function toSGT(time: string, source: string): string {
-  if (!time || !source) return String(time ?? "");
-  let h: number, m: string;
-  if (typeof time === "number" || /^\d+\.?\d*$/.test(String(time).trim())) {
-    const serial = typeof time === "number" ? time : parseFloat(time);
-    const totalMinutes = Math.round(serial * 24 * 60);
-    h = Math.floor(totalMinutes / 60);
-    m = String(totalMinutes % 60).padStart(2, "0");
-  } else {
-    const parts = String(time).split(":");
-    if (parts.length < 2) return String(time);
-    h = parseInt(parts[0], 10);
-    m = parts[1];
-    if (isNaN(h)) return String(time);
-  }
-  return `${String(h).padStart(2, "0")}:${m}`;
+function formatTime(time: string): string {
+  if (!time) return "";
+  return time.substring(0, 5);
 }
 
-function formatDate(date: string): string {
-  if (!date) return "";
-  if (typeof date === "number" || /^\d+\.?\d*$/.test(String(date).trim())) {
-    const serial = typeof date === "number" ? date : parseFloat(date);
-    const d = new Date(1899, 11, 30 + serial);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  }
-  return String(date);
-}
-
-async function fetchSheet(): Promise<{ articles: Article[]; total: string; updated: string }> {
+async function fetchSheet(): Promise<Article[]> {
   const tokenResp = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     body: new URLSearchParams({
@@ -75,58 +47,43 @@ async function fetchSheet(): Promise<{ articles: Article[]; total: string; updat
   const { access_token } = await tokenResp.json();
 
   const resp = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/News%20Feed?valueRenderOption=FORMULA&majorDimension=ROWS`,
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Feed?valueRenderOption=FORMULA&majorDimension=ROWS`,
     { headers: { Authorization: `Bearer ${access_token}` } }
   );
   const data = await resp.json();
   const rows: string[][] = data.values || [];
 
-  let total = "";
-  let updated = "";
-  if (rows.length > 0) {
-    total = rows[0][0] || "";
-    updated = (rows[0][2] || "").replace("Updated: ", "");
-  }
-
   const articles: Article[] = [];
-  for (let i = 2; i < rows.length; i++) {
+  for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
-    if (r.length < 8) continue;
+    if (r.length < 12) continue;
     articles.push({
-      date: r[0] || "",
-      time: r[1] || "",
-      title: cleanTitle(r[2] || ""),
-      company: r[3] || "",
-      product: r[4] || "",
-      country: r[5] || "",
-      source: r[6] || "",
-      url: extractUrl(r[7] || ""),
+      companies: r[0] || "",
+      country: r[1] || "",
+      date: r[2] || "",
+      time: r[3] || "",
+      content: r[4] || "",
+      account: r[5] || "",
+      username: r[6] || "",
+      likes: r[7] || "",
+      retweets: r[8] || "",
+      replies: r[9] || "",
+      views: r[10] || "",
+      url: r[11] || "",
     });
   }
 
-  return { articles, total, updated };
+  return articles;
 }
 
-function sortKey(article: Article): string {
-  const sgtTime = toSGT(article.time, article.source);
-  return `${formatDate(article.date)}T${sgtTime}`;
-}
-
-const { articles, total, updated } = await fetchSheet();
-articles.sort((a, b) => sortKey(b).localeCompare(sortKey(a)));
-
-const sourceLabels: Record<string, string> = {
-  Bloomberg: "Bloomberg",
-  FT: "FT",
-  Twitter: "Twitter",
-};
+const initialArticles = await fetchSheet();
 ---
 
-<BaseLayout title="News Feed" description="Curated energy & market news from Bloomberg, FT, and Twitter.">
+<BaseLayout title="News Feed" description="Curated market & news feed.">
   <div class="sheet-container">
     <div class="stats-row">
-      <span class="stats-count">{total}</span>
-      <span class="stats-updated">Last updated: {updated}</span>
+      <span class="stats-count" id="stats-count">{initialArticles.length} posts</span>
+      <span class="stats-indicator" id="live-indicator">● live</span>
     </div>
 
     <div class="table-wrapper">
@@ -135,28 +92,30 @@ const sourceLabels: Record<string, string> = {
           <tr>
             <th class="col-date">Date</th>
             <th>Time</th>
-            <th class="col-title">Title</th>
-            <th>Company</th>
-            <th>Product</th>
+            <th class="col-title">Content</th>
+            <th>Companies</th>
             <th>Country</th>
             <th class="col-source">Source</th>
           </tr>
         </thead>
-        <tbody>
-          {articles.map((article, idx) => {
+        <tbody id="news-body">
+          {initialArticles.map((article, idx) => {
             const hl = isTrumpStory(article) ? "hl-red" : hasKeyword(article) ? "hl-yellow" : "";
             const rowClass = hl || (idx % 2 === 1 ? "alt" : "");
             return (
             <tr class={rowClass}>
-              <td class="cell-date">{formatDate(article.date)}</td>
-              <td class="cell-time">{toSGT(article.time, article.source)}</td>
+              <td class="cell-date">{article.date}</td>
+              <td class="cell-time">{formatTime(article.time)}</td>
               <td class="cell-title">
-                <a href={article.url} target="_blank" rel="noopener" class="title-link">{article.title}</a>
+                {article.url ? (
+                  <a href={article.url} target="_blank" rel="noopener" class="title-link">{article.content}</a>
+                ) : (
+                  <span class="title-text">{article.content}</span>
+                )}
               </td>
-              <td class="cell-company">{article.company || ""}</td>
-              <td class="cell-product">{article.product || ""}</td>
+              <td class="cell-company">{article.companies || ""}</td>
               <td class="cell-country">{article.country || ""}</td>
-              <td class="cell-source">{sourceLabels[article.source] || article.source}</td>
+              <td class="cell-source">{article.account || article.username || ""}</td>
             </tr>
             );
           })}
@@ -165,6 +124,71 @@ const sourceLabels: Record<string, string> = {
     </div>
   </div>
 </BaseLayout>
+
+<script>
+const KEYWORDS = ["oil", "gas", "lng", "energy", "coal"];
+
+function hasKeyword(article) {
+  const text = (article.content + " " + article.companies).toLowerCase();
+  return KEYWORDS.some((kw) => text.includes(kw));
+}
+
+function isTrumpStory(article) {
+  return article.content.toLowerCase().includes("trump");
+}
+
+function formatTime(time) {
+  if (!time) return "";
+  return time.substring(0, 5);
+}
+
+function renderRows(articles) {
+  const tbody = document.getElementById("news-body");
+  const stats = document.getElementById("stats-count");
+  stats.textContent = articles.length + " posts";
+  tbody.innerHTML = articles.map((article, idx) => {
+    const hl = isTrumpStory(article) ? "hl-red" : hasKeyword(article) ? "hl-yellow" : "";
+    const rowClass = hl || (idx % 2 === 1 ? "alt" : "");
+    const src = article.account || article.username || "";
+    const url = article.url;
+    const content = article.content;
+    return `<tr class="${rowClass}">
+      <td class="cell-date">${esc(article.date)}</td>
+      <td class="cell-time">${esc(formatTime(article.time))}</td>
+      <td class="cell-title">${url
+        ? `<a href="${esc(url)}" target="_blank" rel="noopener" class="title-link">${esc(content)}</a>`
+        : `<span class="title-text">${esc(content)}</span>`}
+      </td>
+      <td class="cell-company">${esc(article.companies || "")}</td>
+      <td class="cell-country">${esc(article.country || "")}</td>
+      <td class="cell-source">${esc(src)}</td>
+    </tr>`;
+  }).join("");
+}
+
+function esc(s) {
+  const div = document.createElement("div");
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+async function fetchLive() {
+  try {
+    const resp = await fetch("/api/news");
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (data.articles && data.articles.length > 0) {
+      renderRows(data.articles);
+    }
+  } catch (_) {
+    // silently fall back to build-time data
+  }
+}
+
+// Fetch live data on page load, then every 60 seconds
+fetchLive();
+setInterval(fetchLive, 60000);
+</script>
 
 <style>
   .sheet-container {
@@ -191,10 +215,11 @@ const sourceLabels: Record<string, string> = {
     color: var(--accent);
   }
 
-  .stats-updated {
-    color: var(--muted);
+  .stats-indicator {
+    font-size: 0.75rem;
+    color: #22c55e;
     font-family: var(--mono);
-    font-size: 0.8rem;
+    margin-left: auto;
   }
 
   .table-wrapper {
@@ -251,8 +276,8 @@ const sourceLabels: Record<string, string> = {
   }
 
   .col-date { width: 100px; }
-  .col-source { width: 80px; }
-  .col-title { min-width: 300px; }
+  .col-source { width: 120px; }
+  .col-title { min-width: 350px; }
 
   .cell-date {
     font-family: var(--mono);
@@ -278,22 +303,23 @@ const sourceLabels: Record<string, string> = {
     color: var(--text);
     text-decoration: none;
     transition: color 0.15s;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .title-link:hover {
     color: #4488ff;
   }
 
+  .title-text {
+    color: var(--text);
+  }
+
   .cell-company {
     color: #4488ff;
     font-weight: 600;
     font-size: 0.8rem;
-  }
-
-  .cell-product {
-    color: #c4b000;
-    font-weight: 600;
-    font-size: 0.78rem;
   }
 
   .cell-country {
@@ -307,11 +333,11 @@ const sourceLabels: Record<string, string> = {
     table { font-size: 0.75rem; }
     .col-date { width: 80px; }
     .col-title { min-width: 0; }
-    th:nth-child(5), td:nth-child(5),
-    th:nth-child(6), td:nth-child(6) { display: none; }
+    th:nth-child(4), td:nth-child(4),
+    th:nth-child(5), td:nth-child(5) { display: none; }
   }
 
   @media (max-width: 500px) {
-    th:nth-child(7), td:nth-child(7) { display: none; }
+    th:nth-child(6), td:nth-child(6) { display: none; }
   }
 </style>
