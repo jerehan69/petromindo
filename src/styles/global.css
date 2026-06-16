@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg: #0a0a0f;
-  --surface: #12121a;
-  --card: #1a1a2e;
-  --border: #2a2a3e;
-  --accent: #00d4ff;
-  --accent-dim: #0088aa;
-  --text: #e0e0e0;
-  --muted: #808090;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --border: #d0d0d8;
+  --accent: #004499;
+  --accent-dim: #3377bb;
+  --text: #0a0a0f;
+  --muted: #555566;
   --font: 'Inter', system-ui, sans-serif;
   --mono: 'JetBrains Mono', monospace;
 }
@@ -38,7 +38,7 @@ a {
 }
 
 a:hover {
-  color: #fff;
+  color: var(--accent-dim);
 }
 
 img, video {
