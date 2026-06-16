@@ -21,7 +21,7 @@ const { title = "News Scraper", description = "A targeted newsfeed for Indonesia
   <body>
     <nav>
       <div class="container">
-        <a href="/" class="logo">~/projects</a>
+        <a href="/" class="logo">{activePage === "news" ? "news" : "~/projects"}</a>
         <div class="links">
           <a href="/" class={activePage === "home" ? "active" : ""}>Home</a>
           <a href="/projects" class={activePage === "projects" ? "active" : ""}>Projects</a>
