@@ -165,7 +165,10 @@ try {
       <span class="stats-count" id="stats-count">{initialArticles.length} posts</span>
       <span class="stats-indicator" id="live-indicator">● live</span>
     </div>
-    <div class="filter-bar" id="filter-bar"></div>
+    <div class="filter-bar" id="filter-bar">
+      <input class="filter-input" id="filter-input" type="text" placeholder="Search company…" autocomplete="off" list="company-suggestions">
+      <datalist id="company-suggestions"></datalist>
+    </div>
 
     <div class="table-wrapper">
       <table>
@@ -251,10 +254,26 @@ function formatTime(time) {
 let allArticles = [];
 let filterCompany = "";
 
+function getUniqueCompanies(articles) {
+  const set = new Set();
+  articles.forEach(a => {
+    filterCompanies(a.companies, a.content).split(", ").forEach(c => {
+      if (c) set.add(c);
+    });
+  });
+  return [...set].sort();
+}
+
+function updateSuggestions(articles) {
+  const datalist = document.getElementById("company-suggestions");
+  const companies = getUniqueCompanies(articles);
+  datalist.innerHTML = companies.map(c => `<option value="${esc(c)}">`).join("");
+}
+
 function renderRows(articles) {
   const tbody = document.getElementById("news-body");
   const stats = document.getElementById("stats-count");
-  const filterBar = document.getElementById("filter-bar");
+  const filterInput = document.getElementById("filter-input");
 
   // Apply company filter if set
   const filtered = filterCompany
@@ -266,16 +285,11 @@ function renderRows(articles) {
 
   stats.textContent = filtered.length + " posts" + (filterCompany ? ` for ${filterCompany}` : "");
 
-  // Show/hide filter bar
-  if (filterCompany) {
-    filterBar.style.display = "flex";
-    filterBar.innerHTML = `
-      <span class="filter-label">Filter: <strong>${esc(filterCompany)}</strong></span>
-      <button class="filter-clear" onclick="clearFilter()">×</button>
-    `;
-  } else {
-    filterBar.style.display = "none";
-  }
+  // Update search input to reflect current filter
+  filterInput.value = filterCompany;
+
+  // Update suggestions
+  updateSuggestions(articles);
 
   tbody.innerHTML = filtered.map((article, idx) => {
     const hl = isTrumpStory(article) ? "hl-red" : hasKeyword(article) ? "hl-yellow" : "";
@@ -308,20 +322,58 @@ function renderRows(articles) {
   }
 }
 
+function setFilter(company) {
+  filterCompany = company;
+  document.getElementById("filter-input").value = company;
+  renderRows(allArticles);
+}
+
 window.clickCompany = function(companies) {
   const list = companies.split(", ");
   if (list.includes(filterCompany)) {
-    filterCompany = "";
+    setFilter("");
   } else {
-    filterCompany = list[0];
+    setFilter(list[0]);
   }
-  renderRows(allArticles);
 };
 
 window.clearFilter = function() {
-  filterCompany = "";
-  renderRows(allArticles);
+  setFilter("");
 };
+
+// Search input handler
+document.addEventListener("DOMContentLoaded", function() {
+  const input = document.getElementById("filter-input");
+  let debounceTimer;
+  input.addEventListener("input", function() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const val = input.value.trim();
+      if (!val) {
+        setFilter("");
+      } else {
+        // Find best match for what they typed
+        const companies = getUniqueCompanies(allArticles);
+        const match = companies.find(c => c.toLowerCase() === val.toLowerCase());
+        if (match) {
+          setFilter(match);
+        } else {
+          // Partial match — filter if they press Enter or select from datalist
+        }
+      }
+    }, 200);
+  });
+
+  // Handle datalist selection (Enter key or click suggestion sets the value)
+  input.addEventListener("change", function() {
+    const val = input.value.trim();
+    const companies = getUniqueCompanies(allArticles);
+    const match = companies.find(c => c.toLowerCase() === val.toLowerCase());
+    if (match) {
+      setFilter(match);
+    }
+  });
+});
 
 function esc(s) {
   const div = document.createElement("div");
@@ -407,7 +459,7 @@ setInterval(fetchLive, 60000);
   }
 
   .filter-bar {
-    display: none;
+    display: flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.4rem 1rem;
@@ -416,6 +468,26 @@ setInterval(fetchLive, 60000);
     border-top: none;
     font-size: 0.82rem;
     font-family: var(--font);
+  }
+
+  .filter-input {
+    flex: 1;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.82rem;
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+  }
+
+  .filter-input:focus {
+    border-color: var(--accent);
+  }
+
+  .filter-input::placeholder {
+    color: var(--muted);
   }
 
   .filter-label {
