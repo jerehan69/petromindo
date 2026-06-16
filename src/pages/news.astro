@@ -259,19 +259,19 @@ setInterval(fetchLive, 60000);
     line-height: 1.4;
   }
 
-  tr.alt td {
+  :global(tr.alt td) {
     background: rgba(255, 255, 255, 0.015);
   }
 
-  tr.hl-yellow td {
+  :global(tr.hl-yellow td) {
     background: rgba(255, 255, 200, 0.25);
   }
 
-  tr.hl-red td {
+  :global(tr.hl-red td) {
     background: rgba(255, 180, 180, 0.25);
   }
 
-  tr:hover td {
+  :global(tr:hover td) {
     background: rgba(0, 212, 255, 0.04) !important;
   }
 
