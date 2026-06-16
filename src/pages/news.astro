@@ -166,8 +166,7 @@ try {
       <span class="stats-indicator" id="live-indicator">● live</span>
     </div>
     <div class="filter-bar" id="filter-bar">
-      <input class="filter-input" id="filter-input" type="text" placeholder="Search company…" autocomplete="off" list="company-suggestions">
-      <datalist id="company-suggestions"></datalist>
+      <input class="filter-input" id="filter-input" type="text" placeholder="Search posts…" autocomplete="off">
     </div>
 
     <div class="table-wrapper">
@@ -252,44 +251,23 @@ function formatTime(time) {
 }
 
 let allArticles = [];
-let filterCompany = "";
-
-function getUniqueCompanies(articles) {
-  const set = new Set();
-  articles.forEach(a => {
-    filterCompanies(a.companies, a.content).split(", ").forEach(c => {
-      if (c) set.add(c);
-    });
-  });
-  return [...set].sort();
-}
-
-function updateSuggestions(articles) {
-  const datalist = document.getElementById("company-suggestions");
-  const companies = getUniqueCompanies(articles);
-  datalist.innerHTML = companies.map(c => `<option value="${esc(c)}">`).join("");
-}
+let searchQuery = "";
 
 function renderRows(articles) {
   const tbody = document.getElementById("news-body");
   const stats = document.getElementById("stats-count");
   const filterInput = document.getElementById("filter-input");
+  const query = searchQuery.toLowerCase();
 
-  // Apply company filter if set
-  const filtered = filterCompany
+  // Apply text search if set
+  const filtered = query
     ? articles.filter(a => {
-        const companies = filterCompanies(a.companies, a.content);
-        return companies.split(", ").some(c => c === filterCompany);
+        const haystack = (a.date + " " + a.content + " " + filterCompanies(a.companies, a.content) + " " + (a.country || "") + " " + (a.account || "")).toLowerCase();
+        return haystack.includes(query);
       })
     : articles;
 
-  stats.textContent = filtered.length + " posts" + (filterCompany ? ` for ${filterCompany}` : "");
-
-  // Update search input to reflect current filter
-  filterInput.value = filterCompany;
-
-  // Update suggestions
-  updateSuggestions(articles);
+  stats.textContent = filtered.length + " posts" + (query ? ` matching "${esc(searchQuery)}"` : "");
 
   tbody.innerHTML = filtered.map((article, idx) => {
     const hl = isTrumpStory(article) ? "hl-red" : hasKeyword(article) ? "hl-yellow" : "";
@@ -305,40 +283,18 @@ function renderRows(articles) {
         ? `<a href="${esc(url)}" target="_blank" rel="noopener" class="title-link">${esc(content)}</a>`
         : `<span class="title-text">${esc(content)}</span>`}
       </td>
-      <td class="cell-company filterable" data-company="${esc(companies)}" onclick="clickCompany('${esc(companies)}')">${esc(companies)}</td>
+      <td class="cell-company">${esc(companies)}</td>
       <td class="cell-country">${esc(article.country || "")}</td>
       <td class="cell-source">${esc(src)}</td>
     </tr>`;
   }).join("");
 
-  // Highlight active filter in table
-  if (filterCompany) {
-    tbody.querySelectorAll(".filterable").forEach(td => {
-      const companies = td.dataset.company.split(", ");
-      if (companies.includes(filterCompany)) {
-        td.classList.add("filter-active");
-      }
-    });
-  }
 }
-
-function setFilter(company) {
-  filterCompany = company;
-  document.getElementById("filter-input").value = company;
-  renderRows(allArticles);
-}
-
-window.clickCompany = function(companies) {
-  const list = companies.split(", ");
-  if (list.includes(filterCompany)) {
-    setFilter("");
-  } else {
-    setFilter(list[0]);
-  }
-};
 
 window.clearFilter = function() {
-  setFilter("");
+  searchQuery = "";
+  document.getElementById("filter-input").value = "";
+  renderRows(allArticles);
 };
 
 // Search input handler
@@ -348,30 +304,9 @@ document.addEventListener("DOMContentLoaded", function() {
   input.addEventListener("input", function() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-      const val = input.value.trim();
-      if (!val) {
-        setFilter("");
-      } else {
-        // Find best match for what they typed
-        const companies = getUniqueCompanies(allArticles);
-        const match = companies.find(c => c.toLowerCase() === val.toLowerCase());
-        if (match) {
-          setFilter(match);
-        } else {
-          // Partial match — filter if they press Enter or select from datalist
-        }
-      }
-    }, 200);
-  });
-
-  // Handle datalist selection (Enter key or click suggestion sets the value)
-  input.addEventListener("change", function() {
-    const val = input.value.trim();
-    const companies = getUniqueCompanies(allArticles);
-    const match = companies.find(c => c.toLowerCase() === val.toLowerCase());
-    if (match) {
-      setFilter(match);
-    }
+      searchQuery = input.value.trim();
+      renderRows(allArticles);
+    }, 150);
   });
 });
 
@@ -490,44 +425,7 @@ setInterval(fetchLive, 60000);
     color: var(--muted);
   }
 
-  .filter-label {
-    color: var(--muted);
-  }
 
-  .filter-label strong {
-    color: var(--accent);
-    font-weight: 600;
-  }
-
-  .filter-clear {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 0.1rem 0.5rem;
-    cursor: pointer;
-    font-size: 1rem;
-    color: var(--muted);
-    line-height: 1.2;
-  }
-
-  .filter-clear:hover {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-  }
-
-  td.filterable {
-    cursor: pointer;
-    position: relative;
-  }
-
-  td.filterable:hover {
-    text-decoration: underline;
-  }
-
-  td.filter-active {
-    background: rgba(230, 81, 0, 0.12) !important;
-  }
 
   .table-wrapper {
     overflow-x: auto;
