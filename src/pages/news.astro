@@ -24,7 +24,12 @@ const COUNTRY_NAMES = new Set(["CHINA", "IRAN", "JAPAN", "KOREA", "QATAR", "UK",
 
 function filterCompanies(val: string): string {
   if (!val) return "";
-  return val.split(", ").filter(c => !COUNTRY_NAMES.has(c)).join(", ");
+  return val.split(", ").filter(c => !COUNTRY_NAMES.has(c)).map(c => {
+    // Tickers (all-uppercase, <= 5 chars) stay as-is
+    if (c === c.toUpperCase() && c.length <= 5) return c;
+    // Everything else: capitalize first letter, lowercase rest
+    return c.charAt(0).toUpperCase() + c.slice(1).toLowerCase();
+  }).join(", ");
 }
 
 function hasKeyword(article: Article): boolean {
@@ -143,7 +148,10 @@ const COUNTRY_NAMES = new Set(["CHINA", "IRAN", "JAPAN", "KOREA", "QATAR", "UK",
 
 function filterCompanies(val) {
   if (!val) return "";
-  return val.split(", ").filter(c => !COUNTRY_NAMES.has(c)).join(", ");
+  return val.split(", ").filter(c => !COUNTRY_NAMES.has(c)).map(c => {
+    if (c === c.toUpperCase() && c.length <= 5) return c;
+    return c.charAt(0).toUpperCase() + c.slice(1).toLowerCase();
+  }).join(", ");
 }
 
 function hasKeyword(article) {
@@ -303,7 +311,7 @@ setInterval(fetchLive, 60000);
   }
 
   :global(tr:hover td) {
-    background: rgba(0, 68, 153, 0.04) !important;
+    font-weight: 700;
   }
 
   .col-date { width: 100px; }
