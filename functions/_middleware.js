@@ -8,7 +8,7 @@
 const PASSWORD = "2907";
 const COOKIE_NAME = "site_auth";
 const COOKIE_VALUE = "1";
-const COOKIE_MAX_AGE = 2592000; // 30 days
+const COOKIE_MAX_AGE = 600; // 10 minutes
 
 const LOGIN_PAGE = (redirect, error) => `<!DOCTYPE html>
 <html lang="en">
