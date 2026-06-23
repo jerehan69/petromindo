@@ -1,0 +1,182 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import fs from "fs";
+
+const CSV = fs.readFileSync("fed_data.csv", "utf-8").trim().split("\n");
+const header = CSV[0].split(",");
+const buckets = header.slice(1);
+
+interface Row {
+  date: string;
+  currentProb: number;
+  higherProb: number;
+  evenHigherProb: number;
+}
+
+const CURRENT_BUCKET = "(350-375)";
+const HIGHER_BUCKET = "(375-400)";
+const CURRENT_IDX = buckets.indexOf(CURRENT_BUCKET);
+const HIGHER_IDX = buckets.indexOf(HIGHER_BUCKET);
+
+const rows: Row[] = [];
+
+for (let i = 1; i < CSV.length; i++) {
+  const cells = CSV[i].split(",");
+  if (!cells[0] || cells.slice(1).every(c => !c.trim())) continue;
+  const date = cells[0];
+  const vals = cells.slice(1).map(v => parseFloat(v) || 0);
+  const currentProb = vals[CURRENT_IDX] || 0;
+  const higherProb = vals[HIGHER_IDX] || 0;
+  let evenHigherProb = 0;
+  for (let j = HIGHER_IDX + 1; j < vals.length; j++) {
+    evenHigherProb += vals[j] || 0;
+  }
+  rows.push({ date, currentProb, higherProb, evenHigherProb });
+}
+
+// Latest 10 dates, newest first
+rows.sort((a, b) => {
+  const [da, db] = [a.date.split("/"), b.date.split("/")];
+  const ta = new Date(`${da[1]}/${da[0]}/${da[2]}`);
+  const tb = new Date(`${db[1]}/${db[0]}/${db[2]}`);
+  return tb.getTime() - ta.getTime();
+});
+const latest = rows.slice(0, 10);
+---
+
+<BaseLayout title="Finance" description="Fed rate probability tracker." activePage="finance">
+  <div class="page-header">
+    <div class="container">
+      <h1>Finance</h1>
+      <p>Fed funds rate probability distribution for the July 29, 2026 FOMC meeting.</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="container">
+      <div class="legend">
+        <span><span class="dot current"></span> Current Rate (3.50–3.75%)</span>
+        <span><span class="dot higher"></span> Higher (3.75–4.00%)</span>
+        <span><span class="dot even-higher"></span> Even Higher (4.00%+)</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Current Rate</th>
+              <th>Higher</th>
+              <th>Even Higher</th>
+            </tr>
+          </thead>
+          <tbody>
+            {latest.map((row, idx) => {
+              const currentPct = (row.currentProb * 100).toFixed(2);
+              const higherPct = (row.higherProb * 100).toFixed(2);
+              const evenHigherPct = (row.evenHigherProb * 100).toFixed(2);
+              return (
+              <tr class={idx % 2 === 1 ? "alt" : ""}>
+                <td class="cell-date">{row.date}</td>
+                <td class="cell-prob current">{currentPct}%</td>
+                <td class="cell-prob higher">{higherPct}%</td>
+                <td class="cell-prob even-higher">{evenHigherPct}%</td>
+              </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-header p {
+    color: var(--muted);
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+  }
+
+  .legend {
+    display: flex;
+    gap: 2rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .legend span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .dot.current { background: #2e7d32; }
+  .dot.higher { background: #e65100; }
+  .dot.even-higher { background: #c62828; }
+
+  .table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.7rem 0.8rem;
+  }
+
+  th {
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  td {
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr.alt td {
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  .cell-date {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .cell-prob {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .cell-prob.current { color: #2e7d32; }
+  .cell-prob.higher { color: #e65100; }
+  .cell-prob.even-higher { color: #c62828; }
+
+  tr:hover td {
+    background: rgba(0, 0, 0, 0.04);
+  }
+</style>
