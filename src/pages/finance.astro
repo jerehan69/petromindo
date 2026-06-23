@@ -2,9 +2,15 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import fs from "fs";
 
+// Build-time CSV data (fallback if live API is unreachable)
 const CSV = fs.readFileSync("fed_data.csv", "utf-8").trim().split("\n");
 const header = CSV[0].split(",");
 const buckets = header.slice(1);
+
+const CURRENT_BUCKET = "(350-375)";
+const HIGHER_BUCKET = "(375-400)";
+const CURRENT_IDX = buckets.indexOf(CURRENT_BUCKET);
+const HIGHER_IDX = buckets.indexOf(HIGHER_BUCKET);
 
 interface Row {
   date: string;
@@ -13,13 +19,7 @@ interface Row {
   evenHigherProb: number;
 }
 
-const CURRENT_BUCKET = "(350-375)";
-const HIGHER_BUCKET = "(375-400)";
-const CURRENT_IDX = buckets.indexOf(CURRENT_BUCKET);
-const HIGHER_IDX = buckets.indexOf(HIGHER_BUCKET);
-
 const rows: Row[] = [];
-
 for (let i = 1; i < CSV.length; i++) {
   const cells = CSV[i].split(",");
   if (!cells[0] || cells.slice(1).every(c => !c.trim())) continue;
@@ -34,23 +34,38 @@ for (let i = 1; i < CSV.length; i++) {
   rows.push({ date, currentProb, higherProb, evenHigherProb });
 }
 
-// Latest 10 dates, newest first
 rows.sort((a, b) => {
   const [da, db] = [a.date.split("/"), b.date.split("/")];
-  const ta = new Date(`${da[1]}/${da[0]}/${da[2]}`);
-  const tb = new Date(`${db[1]}/${db[0]}/${db[2]}`);
-  return tb.getTime() - ta.getTime();
+  return new Date(`${db[1]}/${db[0]}/${db[2]}`).getTime() - new Date(`${da[1]}/${da[0]}/${da[2]}`).getTime();
 });
 const latest = rows.slice(0, 10);
+
+const FEDWATCH_API = "https://fedwatch.jemxx.dev";
 ---
 
 <BaseLayout title="Finance" description="Fed rate probability tracker." activePage="finance">
   <div class="page-header">
     <div class="container">
       <h1>Finance</h1>
-      <p>Fed funds rate probability distribution for the July 29, 2026 FOMC meeting.</p>
+      <p id="page-subtitle">Fed funds rate probability distribution</p>
     </div>
   </div>
+
+  <section>
+    <div class="container">
+      <div class="live-bar">
+        <div class="live-info">
+          <span class="current-rate-badge" id="current-rate-badge">3.50–3.75%</span>
+          <span class="meeting-info" id="meeting-info">Jul 29, 2026 FOMC</span>
+          <span class="updated-at" id="updated-at"></span>
+        </div>
+        <button class="refresh-btn" id="refresh-btn" onclick="handleRefresh()">
+          <span class="refresh-icon" id="refresh-icon">↻</span>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </section>
 
   <section>
     <div class="container">
@@ -62,8 +77,38 @@ const latest = rows.slice(0, 10);
     </div>
   </section>
 
+  <section id="today-section" class="today-section">
+    <div class="container">
+      <div class="prob-cards">
+        <div class="prob-card current">
+          <div class="prob-label">Current Rate
+            <span class="delta" id="delta-now-cur"></span>
+          </div>
+          <div class="prob-value" id="prob-current">--</div>
+        </div>
+        <div class="prob-card higher">
+          <div class="prob-label">Higher
+            <span class="delta" id="delta-now-high"></span>
+          </div>
+          <div class="prob-value" id="prob-higher">--</div>
+        </div>
+        <div class="prob-card even-higher">
+          <div class="prob-label">Even Higher
+            <span class="delta" id="delta-now-even"></span>
+          </div>
+          <div class="prob-value" id="prob-even-higher">--</div>
+        </div>
+      </div>
+      <div class="delta-labels">
+        <span>vs 1 day ago</span>
+        <span>vs 1 week ago</span>
+      </div>
+    </div>
+  </section>
+
   <section>
     <div class="container">
+      <h2 class="section-title">Historical Probabilities</h2>
       <div class="table-wrapper">
         <table>
           <thead>
@@ -74,7 +119,7 @@ const latest = rows.slice(0, 10);
               <th>Even Higher</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="history-body">
             {latest.map((row, idx) => {
               const currentPct = (row.currentProb * 100).toFixed(2);
               const higherPct = (row.higherProb * 100).toFixed(2);
@@ -95,6 +140,85 @@ const latest = rows.slice(0, 10);
   </section>
 </BaseLayout>
 
+<script>
+const API = "https://fedwatch.jemxx.dev";
+
+function fmtPct(v) {
+  return (v).toFixed(1) + "%";
+}
+
+function fmtDelta(v) {
+  if (v === undefined || v === null) return "";
+  const sign = v >= 0 ? "+" : "";
+  return `${sign}${v.toFixed(1)}pp`;
+}
+
+function updateCards(data) {
+  const currentBucket = data.buckets.find(b => b.rate === "350-375");
+  const higherBucket = data.buckets.find(b => b.rate === "375-400");
+  const evenHigher = data.buckets
+    .filter(b => ["400-425", "425-450", "450-475", "475-500"].includes(b.rate))
+    .reduce((s, b) => s + b.probNow, 0);
+
+  const curEl = document.getElementById("prob-current");
+  const highEl = document.getElementById("prob-higher");
+  const evenEl = document.getElementById("prob-even-higher");
+
+  if (currentBucket) {
+    curEl.textContent = fmtPct(currentBucket.probNow);
+    document.getElementById("delta-now-cur").textContent = fmtDelta(currentBucket.probNow - currentBucket.prob1Day);
+  }
+  if (higherBucket) {
+    highEl.textContent = fmtPct(higherBucket.probNow);
+    document.getElementById("delta-now-high").textContent = fmtDelta(higherBucket.probNow - higherBucket.prob1Day);
+  }
+  evenEl.textContent = fmtPct(evenHigher);
+  document.getElementById("delta-now-even").textContent = fmtDelta(
+    evenHigher - (data.buckets.find(b => ["400-425", "425-450", "450-475", "475-500"].includes(b.rate))?.prob1Day || 0)
+  );
+
+  if (data.currentRate) {
+    document.getElementById("current-rate-badge").textContent = data.currentRate.replace("-", "–") + "%";
+  }
+  if (data.meetingDate) {
+    document.getElementById("meeting-info").textContent = data.meetingDate + " FOMC";
+  }
+  if (data.lastUpdated) {
+    document.getElementById("updated-at").textContent = "Updated " + data.lastUpdated;
+  }
+}
+
+async function fetchLive() {
+  try {
+    const resp = await fetch(API + "/scrape");
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const json = await resp.json();
+    if (json.status === "ok") updateCards(json.data);
+  } catch (e) {
+    document.getElementById("prob-current").textContent = "Offline";
+  }
+}
+
+async function handleRefresh() {
+  const btn = document.getElementById("refresh-btn");
+  const icon = document.getElementById("refresh-icon");
+  btn.disabled = true;
+  icon.classList.add("spinning");
+
+  try {
+    await fetch(API + "/refresh", { method: "POST" });
+    // Wait a moment for the new data to settle, then re-fetch
+    await new Promise(r => setTimeout(r, 2000));
+    await fetchLive();
+  } catch (_) {}
+
+  btn.disabled = false;
+  icon.classList.remove("spinning");
+}
+
+document.addEventListener("DOMContentLoaded", fetchLive);
+</script>
+
 <style>
   .page-header p {
     color: var(--muted);
@@ -102,30 +226,146 @@ const latest = rows.slice(0, 10);
     font-size: 0.95rem;
   }
 
+  .live-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+  }
+
+  .live-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .current-rate-badge {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--accent);
+    background: rgba(230, 81, 0, 0.1);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+  }
+
+  .meeting-info {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .updated-at {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    font-size: 0.85rem;
+    font-family: var(--font);
+    cursor: pointer;
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .refresh-icon { display: inline-block; font-size: 1rem; }
+  .refresh-icon.spinning { animation: spin 1s linear infinite; }
+
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
   .legend {
     display: flex;
     gap: 2rem;
     font-size: 0.85rem;
     color: var(--muted);
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
   }
 
-  .legend span {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
+  .legend span { display: flex; align-items: center; gap: 0.4rem; }
 
   .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    display: inline-block;
+    width: 10px; height: 10px; border-radius: 50%; display: inline-block;
   }
-
   .dot.current { background: #2e7d32; }
   .dot.higher { background: #e65100; }
   .dot.even-higher { background: #c62828; }
+
+  .today-section { padding-top: 0; }
+
+  .prob-cards {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .prob-card {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .prob-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+
+  .delta {
+    font-size: 0.75rem;
+    font-family: var(--mono);
+  }
+
+  .prob-card.current .delta { color: #2e7d32; }
+  .prob-card.higher .delta { color: #e65100; }
+  .prob-card.even-higher .delta { color: #c62828; }
+
+  .prob-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    font-family: var(--mono);
+  }
+
+  .prob-card.current .prob-value { color: #2e7d32; }
+  .prob-card.higher .prob-value { color: #e65100; }
+  .prob-card.even-higher .prob-value { color: #c62828; }
+
+  .delta-labels {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  .delta-labels span { min-width: 0; }
+
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    color: var(--text);
+  }
 
   .table-wrapper {
     overflow-x: auto;
@@ -133,16 +373,9 @@ const latest = rows.slice(0, 10);
     border-radius: 8px;
   }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 
-  th, td {
-    text-align: left;
-    padding: 0.7rem 0.8rem;
-  }
+  th, td { text-align: left; padding: 0.7rem 0.8rem; }
 
   th {
     background: var(--surface);
@@ -151,13 +384,8 @@ const latest = rows.slice(0, 10);
     color: var(--text);
   }
 
-  td {
-    border-bottom: 1px solid var(--border);
-  }
-
-  tr.alt td {
-    background: rgba(0, 0, 0, 0.02);
-  }
+  td { border-bottom: 1px solid var(--border); }
+  tr.alt td { background: rgba(0, 0, 0, 0.02); }
 
   .cell-date {
     font-family: var(--mono);
@@ -176,7 +404,5 @@ const latest = rows.slice(0, 10);
   .cell-prob.higher { color: #e65100; }
   .cell-prob.even-higher { color: #c62828; }
 
-  tr:hover td {
-    background: rgba(0, 0, 0, 0.04);
-  }
+  tr:hover td { background: rgba(0, 0, 0, 0.04); }
 </style>
