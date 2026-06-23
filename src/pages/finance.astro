@@ -72,7 +72,8 @@ interface Row {
 const rows: Row[] = [];
 for (let i = 1; i < CSV.length; i++) {
   const cells = CSV[i].split(",");
-  if (!cells[0] || cells.slice(1).every(c => !c.trim())) continue;
+  if (!cells[0] || cells[0].trim().toLowerCase() === "date" ||
+      cells.slice(1).every(c => !c.trim())) continue;
   const vals = cells.slice(1).map(v => parseFloat(v) || 0);
   const row: Row = {
     date: cells[0],
