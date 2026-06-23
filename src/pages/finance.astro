@@ -2,18 +2,68 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import fs from "fs";
 
-// Build-time CSV data (fallback if live API is unreachable)
+// ----- Build-time data ----------------------------------------------------
+// 1) meta.json (written each daily run) tells us which bucket to treat as
+//    current / one-cut-below / one-hike-above. Falls back to today's known
+//    target if missing.
+interface Meta {
+  current_bucket_label: string;
+  prior_bucket_label: string;
+  next_bucket_label: string;
+  current_target: string;
+  meeting: string;
+  meeting_iso: string;
+  date: string;
+  contract: string;
+  contract_price: number;
+  post_rate_bps: number;
+}
+let meta: Meta | null = null;
+try {
+  meta = JSON.parse(fs.readFileSync("meta.json", "utf-8"));
+} catch {
+  meta = null;
+}
+const CUR_LABEL = meta?.current_bucket_label ?? "(350-375)";
+const LOW_LABEL = meta?.prior_bucket_label ?? "(325-350)";
+const HIGH_LABEL = meta?.next_bucket_label ?? "(375-400)";
+const CUR_RANGE = meta?.current_target ?? "350-375";
+const MEETING = meta?.meeting ?? "Jul 28, 2026";
+
+// helper: "(325-350)" -> "3.25–3.50%" (display string)
+const bucketRangeToDisplay = (label: string): string => {
+  const m = label.match(/^\((\d+)-(\d+)\)$/);
+  if (!m) return label;
+  const lo = Number(m[1]) / 100; const hi = Number(m[2]) / 100;
+  const f = (v: number) => v.toFixed(2).replace(/\.?0+$/, "");
+  return `${f(lo)}–${f(hi)}%`;
+};
+const CUR_DISPLAY = bucketRangeToDisplay(CUR_LABEL);
+const LOW_DISPLAY = bucketRangeToDisplay(LOW_LABEL);
+const HIGH_DISPLAY = bucketRangeToDisplay(HIGH_LABEL);
+
+// 2) CSV — read full history, compute 4 tracked bundles per row.
 const CSV = fs.readFileSync("fed_data.csv", "utf-8").trim().split("\n");
 const header = CSV[0].split(",");
-const buckets = header.slice(1);
+const allBuckets = header.slice(1);
+const CUR_IDX = allBuckets.indexOf(CUR_LABEL);
+const LOW_IDX = allBuckets.indexOf(LOW_LABEL);
+const HIGH_IDX = allBuckets.indexOf(HIGH_LABEL);
 
-const CURRENT_BUCKET = "(350-375)";
-const HIGHER_BUCKET = "(375-400)";
-const CURRENT_IDX = buckets.indexOf(CURRENT_BUCKET);
-const HIGHER_IDX = buckets.indexOf(HIGHER_BUCKET);
+// Bins summed as "even higher" = everything above HIGHER (4 buckets = 100bps after current upper bound)
+const evenHigherIdxs =
+  HIGH_IDX >= 0
+    ? [HIGH_IDX + 1, HIGH_IDX + 2, HIGH_IDX + 3, HIGH_IDX + 4]
+        .filter(i => i < allBuckets.length)
+    : [];
+const evenHigherLowBps = evenHigherIdxs.length > 0
+  ? Number(allBuckets[evenHigherIdxs[0]].match(/\((\d+)/)[1])
+  : 400;
+const EVEN_HIGHER_DISPLAY = (evenHigherLowBps / 100).toFixed(2).replace(/\.?0+$/, "") + "%+";
 
 interface Row {
   date: string;
+  lowerProb: number;
   currentProb: number;
   higherProb: number;
   evenHigherProb: number;
@@ -23,31 +73,49 @@ const rows: Row[] = [];
 for (let i = 1; i < CSV.length; i++) {
   const cells = CSV[i].split(",");
   if (!cells[0] || cells.slice(1).every(c => !c.trim())) continue;
-  const date = cells[0];
   const vals = cells.slice(1).map(v => parseFloat(v) || 0);
-  const currentProb = vals[CURRENT_IDX] || 0;
-  const higherProb = vals[HIGHER_IDX] || 0;
-  let evenHigherProb = 0;
-  for (let j = HIGHER_IDX + 1; j < vals.length; j++) {
-    evenHigherProb += vals[j] || 0;
-  }
-  rows.push({ date, currentProb, higherProb, evenHigherProb });
+  const row: Row = {
+    date: cells[0],
+    lowerProb: LOW_IDX >= 0 ? vals[LOW_IDX] : 0,
+    currentProb: CUR_IDX >= 0 ? vals[CUR_IDX] : 0,
+    higherProb: HIGH_IDX >= 0 ? vals[HIGH_IDX] : 0,
+    evenHigherProb: evenHigherIdxs.reduce((s, j) => s + (vals[j] || 0), 0),
+  };
+  rows.push(row);
 }
 
 rows.sort((a, b) => {
   const [da, db] = [a.date.split("/"), b.date.split("/")];
-  return new Date(`${db[1]}/${db[0]}/${db[2]}`).getTime() - new Date(`${da[1]}/${da[0]}/${da[2]}`).getTime();
+  return new Date(`${db[1]}/${db[0]}/${db[2]}`).getTime() -
+         new Date(`${da[1]}/${da[0]}/${da[2]}`).getTime();
 });
 const latest = rows.slice(0, 10);
 
+// chartData = chronological (oldest -> newest) for line-chart x-axis
+const chartRows = [...rows].reverse().slice(-120).map(r => ({
+  date: r.date,
+  lower: +(r.lowerProb * 100).toFixed(2),
+  current: +(r.currentProb * 100).toFixed(2),
+  higher: +(r.higherProb * 100).toFixed(2),
+  evenHigher: +(r.evenHigherProb * 100).toFixed(2),
+}));
+
 const FEDWATCH_API = "https://fedwatch.jemxx.dev";
+
+// Bake dictionary for client JS to look up buckets from /scrape response
+const bucketLabels = {
+  lower: LOW_LABEL.replace(/[()]/g, ""),
+  current: CUR_LABEL.replace(/[()]/g, ""),
+  higher: HIGH_LABEL.replace(/[()]/g, ""),
+  evenHigher: evenHigherIdxs.map(j => allBuckets[j].replace(/[()]/g, "")),
+};
 ---
 
 <BaseLayout title="Finance" description="Fed rate probability tracker." activePage="finance">
   <div class="page-header">
     <div class="container">
       <h1>Finance</h1>
-      <p id="page-subtitle">Fed funds rate probability distribution</p>
+      <p id="page-subtitle">Fed funds rate probability distribution — next FOMC meeting</p>
     </div>
   </div>
 
@@ -55,8 +123,8 @@ const FEDWATCH_API = "https://fedwatch.jemxx.dev";
     <div class="container">
       <div class="live-bar">
         <div class="live-info">
-          <span class="current-rate-badge" id="current-rate-badge">3.50–3.75%</span>
-          <span class="meeting-info" id="meeting-info">Jul 29, 2026 FOMC</span>
+          <span class="current-rate-badge" id="current-rate-badge">{CUR_DISPLAY}</span>
+          <span class="meeting-info" id="meeting-info">{MEETING} FOMC</span>
           <span class="updated-at" id="updated-at"></span>
         </div>
         <button class="refresh-btn" id="refresh-btn" onclick="handleRefresh()">
@@ -70,9 +138,10 @@ const FEDWATCH_API = "https://fedwatch.jemxx.dev";
   <section>
     <div class="container">
       <div class="legend">
-        <span><span class="dot current"></span> Current Rate (3.50–3.75%)</span>
-        <span><span class="dot higher"></span> Higher (3.75–4.00%)</span>
-        <span><span class="dot even-higher"></span> Even Higher (4.00%+)</span>
+        <span><span class="dot lower"></span> One cut (-25bp · {LOW_DISPLAY})</span>
+        <span><span class="dot current"></span> Hold ({CUR_DISPLAY})</span>
+        <span><span class="dot higher"></span> One hike (+25bp · {HIGH_DISPLAY})</span>
+        <span><span class="dot even-higher"></span> Two hikes (+50bp+)</span>
       </div>
     </div>
   </section>
@@ -80,20 +149,26 @@ const FEDWATCH_API = "https://fedwatch.jemxx.dev";
   <section id="today-section" class="today-section">
     <div class="container">
       <div class="prob-cards">
+        <div class="prob-card lower">
+          <div class="prob-label">One cut (-25bp)
+            <span class="delta" id="delta-now-low"></span>
+          </div>
+          <div class="prob-value" id="prob-lower">--</div>
+        </div>
         <div class="prob-card current">
-          <div class="prob-label">Current Rate
+          <div class="prob-label">Hold
             <span class="delta" id="delta-now-cur"></span>
           </div>
           <div class="prob-value" id="prob-current">--</div>
         </div>
         <div class="prob-card higher">
-          <div class="prob-label">Higher
+          <div class="prob-label">One hike (+25bp)
             <span class="delta" id="delta-now-high"></span>
           </div>
           <div class="prob-value" id="prob-higher">--</div>
         </div>
         <div class="prob-card even-higher">
-          <div class="prob-label">Even Higher
+          <div class="prob-label">Two hikes (+50bp+)
             <span class="delta" id="delta-now-even"></span>
           </div>
           <div class="prob-value" id="prob-even-higher">--</div>
@@ -108,28 +183,37 @@ const FEDWATCH_API = "https://fedwatch.jemxx.dev";
 
   <section>
     <div class="container">
+      <h2 class="section-title">Probability Trend (last 120 days)</h2>
+      <div class="chart-wrapper">
+        <canvas id="trend-chart" height="120"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
       <h2 class="section-title">Historical Probabilities</h2>
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
               <th>Date</th>
-              <th>Current Rate</th>
-              <th>Higher</th>
-              <th>Even Higher</th>
+              <th>One cut</th>
+              <th>Hold</th>
+              <th>One hike</th>
+              <th>Two hikes+</th>
             </tr>
           </thead>
           <tbody id="history-body">
             {latest.map((row, idx) => {
-              const currentPct = (row.currentProb * 100).toFixed(2);
-              const higherPct = (row.higherProb * 100).toFixed(2);
-              const evenHigherPct = (row.evenHigherProb * 100).toFixed(2);
+              const fmt = (v: number) => (v * 100).toFixed(2) + "%";
               return (
               <tr class={idx % 2 === 1 ? "alt" : ""}>
                 <td class="cell-date">{row.date}</td>
-                <td class="cell-prob current">{currentPct}%</td>
-                <td class="cell-prob higher">{higherPct}%</td>
-                <td class="cell-prob even-higher">{evenHigherPct}%</td>
+                <td class="cell-prob lower">{fmt(row.lowerProb)}</td>
+                <td class="cell-prob current">{fmt(row.currentProb)}</td>
+                <td class="cell-prob higher">{fmt(row.higherProb)}</td>
+                <td class="cell-prob even-higher">{fmt(row.evenHigherProb)}</td>
               </tr>
               );
             })}
@@ -140,45 +224,51 @@ const FEDWATCH_API = "https://fedwatch.jemxx.dev";
   </section>
 </BaseLayout>
 
-<script>
-const API = "https://fedwatch.jemxx.dev";
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" defer></script>
+<script is:inline define:vars={{ chartRows, bucketLabels, FEDWATCH_API }}>
+const API = FEDWATCH_API;
 
-function fmtPct(v) {
-  return (v).toFixed(1) + "%";
-}
-
+function fmtPct(v) { return (v).toFixed(1) + "%"; }
 function fmtDelta(v) {
-  if (v === undefined || v === null) return "";
+  if (v === undefined || v === null || isNaN(v)) return "";
   const sign = v >= 0 ? "+" : "";
   return `${sign}${v.toFixed(1)}pp`;
 }
 
 function updateCards(data) {
-  const currentBucket = data.buckets.find(b => b.rate === "350-375");
-  const higherBucket = data.buckets.find(b => b.rate === "375-400");
-  const evenHigher = data.buckets
-    .filter(b => ["400-425", "425-450", "450-475", "475-500"].includes(b.rate))
+  const find = (rateStr) => data.buckets?.find(b => b.rate === rateStr);
+  const lowerBucket = find(bucketLabels.lower);
+  const currentBucket = find(bucketLabels.current);
+  const higherBucket = find(bucketLabels.higher);
+  const evenHigher = (data.buckets || [])
+    .filter(b => bucketLabels.evenHigher.includes(b.rate))
     .reduce((s, b) => s + b.probNow, 0);
 
-  const curEl = document.getElementById("prob-current");
-  const highEl = document.getElementById("prob-higher");
-  const evenEl = document.getElementById("prob-even-higher");
-
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = (val === undefined || val === null || isNaN(val))
+      ? "0.0%" : fmtPct(val);
+  };
   if (currentBucket) {
-    curEl.textContent = fmtPct(currentBucket.probNow);
+    setVal("prob-current", currentBucket.probNow);
     document.getElementById("delta-now-cur").textContent = fmtDelta(currentBucket.probNow - currentBucket.prob1Day);
   }
   if (higherBucket) {
-    highEl.textContent = fmtPct(higherBucket.probNow);
+    setVal("prob-higher", higherBucket.probNow);
     document.getElementById("delta-now-high").textContent = fmtDelta(higherBucket.probNow - higherBucket.prob1Day);
   }
-  evenEl.textContent = fmtPct(evenHigher);
-  document.getElementById("delta-now-even").textContent = fmtDelta(
-    evenHigher - (data.buckets.find(b => ["400-425", "425-450", "450-475", "475-500"].includes(b.rate))?.prob1Day || 0)
-  );
+  if (lowerBucket) {
+    setVal("prob-lower", lowerBucket.probNow);
+    document.getElementById("delta-now-low").textContent = fmtDelta(lowerBucket.probNow - lowerBucket.prob1Day);
+  } else {
+    setVal("prob-lower", 0);
+  }
+  setVal("prob-even-higher", evenHigher);
 
   if (data.currentRate) {
-    document.getElementById("current-rate-badge").textContent = data.currentRate.replace("-", "–") + "%";
+    document.getElementById("current-rate-badge").textContent =
+      data.currentRate.replace("-", "–") + "%";
   }
   if (data.meetingDate) {
     document.getElementById("meeting-info").textContent = data.meetingDate + " FOMC";
@@ -204,19 +294,65 @@ async function handleRefresh() {
   const icon = document.getElementById("refresh-icon");
   btn.disabled = true;
   icon.classList.add("spinning");
-
   try {
     await fetch(API + "/refresh", { method: "POST" });
-    // Wait a moment for the new data to settle, then re-fetch
     await new Promise(r => setTimeout(r, 2000));
     await fetchLive();
   } catch (_) {}
-
   btn.disabled = false;
   icon.classList.remove("spinning");
 }
 
-document.addEventListener("DOMContentLoaded", fetchLive);
+function renderChart() {
+  if (typeof Chart === "undefined") {
+    setTimeout(renderChart, 100);
+    return;
+  }
+  const labels = chartRows.map(r => r.date);
+  const dataset = (key, color, label) => ({
+    label,
+    data: chartRows.map(r => r[key]),
+    borderColor: color,
+    backgroundColor: color + "22",
+    fill: false,
+    tension: 0.25,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    borderWidth: 2,
+  });
+  new Chart(document.getElementById("trend-chart"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        dataset("lower", "#1976d2", "One cut (-25bp)"),
+        dataset("current", "#2e7d32", "Hold"),
+        dataset("higher", "#e65100", "One hike (+25bp)"),
+        dataset("evenHigher", "#c62828", "Two hikes (+50bp+)"),
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { position: "bottom",
+          labels: { color: getComputedStyle(document.body).color, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%` } },
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 8, autoSkip: true }, grid: { display: false } },
+        y: { min: 0, max: 100, ticks: { callback: v => v + "%" },
+             grid: { color: "rgba(127,127,127,0.18)" } },
+      },
+    },
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  fetchLive();
+  renderChart();
+});
 </script>
 
 <style>
@@ -236,173 +372,92 @@ document.addEventListener("DOMContentLoaded", fetchLive);
     padding: 0.8rem 1rem;
   }
 
-  .live-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
+  .live-info { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 
   .current-rate-badge {
-    font-size: 1.1rem;
-    font-weight: 700;
-    font-family: var(--mono);
-    color: var(--accent);
-    background: rgba(230, 81, 0, 0.1);
-    padding: 0.2rem 0.6rem;
-    border-radius: 4px;
+    font-size: 1.1rem; font-weight: 700; font-family: var(--mono);
+    color: var(--accent); background: rgba(230, 81, 0, 0.1);
+    padding: 0.2rem 0.6rem; border-radius: 4px;
   }
-
-  .meeting-info {
-    font-size: 0.85rem;
-    color: var(--muted);
-  }
-
-  .updated-at {
-    font-size: 0.78rem;
-    color: var(--muted);
-    font-family: var(--mono);
-  }
+  .meeting-info { font-size: 0.85rem; color: var(--muted); }
+  .updated-at { font-size: 0.78rem; color: var(--muted); font-family: var(--mono); }
 
   .refresh-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
+    display: flex; align-items: center; gap: 0.35rem;
     padding: 0.4rem 0.8rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--surface);
-    font-size: 0.85rem;
-    font-family: var(--font);
-    cursor: pointer;
-    color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface); font-size: 0.85rem;
+    font-family: var(--font); cursor: pointer; color: var(--text);
     transition: border-color 0.15s;
   }
-
   .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
   .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
   .refresh-icon { display: inline-block; font-size: 1rem; }
   .refresh-icon.spinning { animation: spin 1s linear infinite; }
-
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
   .legend {
-    display: flex;
-    gap: 2rem;
-    font-size: 0.85rem;
-    color: var(--muted);
-    margin-bottom: 0.5rem;
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+    font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem;
   }
-
   .legend span { display: flex; align-items: center; gap: 0.4rem; }
-
-  .dot {
-    width: 10px; height: 10px; border-radius: 50%; display: inline-block;
-  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot.lower { background: #1976d2; }
   .dot.current { background: #2e7d32; }
   .dot.higher { background: #e65100; }
   .dot.even-higher { background: #c62828; }
 
   .today-section { padding-top: 0; }
 
-  .prob-cards {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 0.3rem;
-  }
-
+  .prob-cards { display: flex; gap: 1rem; margin-bottom: 0.3rem; flex-wrap: wrap; }
   .prob-card {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1rem;
-    text-align: center;
+    flex: 1 1 0; min-width: 130px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem; text-align: center;
   }
-
   .prob-label {
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-bottom: 0.4rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
+    font-size: 0.8rem; color: var(--muted); margin-bottom: 0.4rem;
+    display: flex; align-items: center; justify-content: center; gap: 0.4rem;
   }
+  .delta { font-size: 0.75rem; font-family: var(--mono); }
 
-  .delta {
-    font-size: 0.75rem;
-    font-family: var(--mono);
-  }
+  .prob-card.lower .delta, .prob-card.lower .prob-value { color: #1976d2; }
+  .prob-card.current .delta, .prob-card.current .prob-value { color: #2e7d32; }
+  .prob-card.higher .delta, .prob-card.higher .prob-value { color: #e65100; }
+  .prob-card.even-higher .delta, .prob-card.even-higher .prob-value { color: #c62828; }
 
-  .prob-card.current .delta { color: #2e7d32; }
-  .prob-card.higher .delta { color: #e65100; }
-  .prob-card.even-higher .delta { color: #c62828; }
-
-  .prob-value {
-    font-size: 1.8rem;
-    font-weight: 700;
-    font-family: var(--mono);
-  }
-
-  .prob-card.current .prob-value { color: #2e7d32; }
-  .prob-card.higher .prob-value { color: #e65100; }
-  .prob-card.even-higher .prob-value { color: #c62828; }
+  .prob-value { font-size: 1.8rem; font-weight: 700; font-family: var(--mono); }
 
   .delta-labels {
-    display: flex;
-    gap: 1rem;
-    font-size: 0.72rem;
-    color: var(--muted);
-    justify-content: center;
-    margin-bottom: 1.5rem;
+    display: flex; gap: 1rem; font-size: 0.72rem; color: var(--muted);
+    justify-content: center; margin-bottom: 1.5rem;
   }
   .delta-labels span { min-width: 0; }
 
-  .section-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 0.8rem;
-    color: var(--text);
+  .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.8rem; color: var(--text); }
+
+  .chart-wrapper {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;
+    height: 320px; position: relative;
   }
 
   .table-wrapper {
-    overflow-x: auto;
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    overflow-x: auto; border: 1px solid var(--border); border-radius: 8px;
   }
-
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-
   th, td { text-align: left; padding: 0.7rem 0.8rem; }
-
   th {
-    background: var(--surface);
-    border-bottom: 2px solid var(--border);
-    font-weight: 600;
-    color: var(--text);
+    background: var(--surface); border-bottom: 2px solid var(--border);
+    font-weight: 600; color: var(--text);
   }
-
   td { border-bottom: 1px solid var(--border); }
   tr.alt td { background: rgba(0, 0, 0, 0.02); }
-
-  .cell-date {
-    font-family: var(--mono);
-    font-size: 0.85rem;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
-  .cell-prob {
-    font-family: var(--mono);
-    font-weight: 600;
-    font-size: 0.95rem;
-  }
-
+  .cell-date { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
+  .cell-prob { font-family: var(--mono); font-weight: 600; font-size: 0.95rem; }
+  .cell-prob.lower { color: #1976d2; }
   .cell-prob.current { color: #2e7d32; }
   .cell-prob.higher { color: #e65100; }
   .cell-prob.even-higher { color: #c62828; }
-
   tr:hover td { background: rgba(0, 0, 0, 0.04); }
 </style>
