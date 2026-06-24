@@ -114,6 +114,11 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const path = url.pathname;
 
+  // ── Skip auth for API routes ────────────────────────────────────────
+  if (path.startsWith("/api/")) {
+    return next();
+  }
+
   // ── Check auth cookie ──────────────────────────────────────────────
   const cookies = request.headers.get("Cookie") || "";
   const isAuth = cookies

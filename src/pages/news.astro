@@ -110,21 +110,11 @@ function formatTime(time: string): string {
 }
 
 async function fetchSheet(): Promise<Article[]> {
-  const tokenResp = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    body: new URLSearchParams({
-      client_id: import.meta.env.GOOGLE_CLIENT_ID,
-      client_secret: import.meta.env.GOOGLE_CLIENT_SECRET,
-      refresh_token: import.meta.env.GOOGLE_REFRESH_TOKEN,
-      grant_type: "refresh_token",
-    }),
-  });
-  const { access_token } = await tokenResp.json();
-
   const resp = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Feed?valueRenderOption=FORMULA&majorDimension=ROWS`,
-    { headers: { Authorization: `Bearer ${access_token}` } }
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Feed?key=${import.meta.env.GOOGLE_API_KEY}&valueRenderOption=FORMULA&majorDimension=ROWS`
   );
+  if (!resp.ok) throw new Error(`Sheet API ${resp.status}`);
+
   const data = await resp.json();
   const rows: string[][] = data.values || [];
 
