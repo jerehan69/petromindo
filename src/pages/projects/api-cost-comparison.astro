@@ -104,18 +104,23 @@ const sheetUrl = "https://docs.google.com/spreadsheets/d/1s2cu53HMW7QClMiPpajXUQ
 
 <script>
 import Chart from 'chart.js/auto';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 (function() {
-  function makeChart(id, data, colors) {
+  const FLASH_PRICE = 0.18;
+
+  function makeChart(id, data, colors, opts) {
     const ctx = document.getElementById(id);
     if (!ctx) return;
+    opts = opts || {};
     new Chart(ctx, {
       type: 'bar',
+      plugins: opts.useLabels ? [ChartDataLabels] : [],
       data: {
         labels: data.map(d => d.label),
         datasets: [{
           data: data.map(d => d.value),
-          backgroundColor: data.map((d, i) => colors[i % colors.length]),
+          backgroundColor: colors,
           borderColor: 'transparent',
           borderRadius: 4,
           borderSkipped: false,
@@ -131,11 +136,22 @@ import Chart from 'chart.js/auto';
             callbacks: {
               label: ctx => '$' + ctx.raw + ' / 1M output tokens'
             }
-          }
+          },
+          datalabels: opts.useLabels ? {
+            anchor: 'end',
+            align: 'end',
+            offset: 4,
+            color: '#999',
+            font: { size: 10, weight: 'bold' },
+            formatter: (v) => {
+              const mult = (v / FLASH_PRICE).toFixed(v >= 1 ? 0 : 1);
+              return mult + 'x';
+            }
+          } : {}
         },
         scales: {
           x: {
-            title: { display: true, text: '$ / 1M output tokens', color: '#8a7e72', font: { size: 10 } },
+            title: opts.xTitle ? { display: true, text: opts.xTitle, color: '#8a7e72', font: { size: 10 } } : { display: false },
             grid: { color: 'rgba(224, 216, 208, 0.3)' },
             ticks: { color: '#8a7e72', font: { size: 10 }, callback: v => '$' + v }
           },
@@ -149,7 +165,7 @@ import Chart from 'chart.js/auto';
   }
 
   const cnColors = ['#c0392b','#e74c3c','#e67e22','#f39c12','#27ae60','#2ecc71','#1abc9c','#16a085','#3498db','#2980b9'];
-  const usColors = ['#8e44ad','#9b59b6','#e74c3c','#c0392b','#e67e22','#f39c12','#3498db','#2980b9','#1abc9c','#16a085'];
+  const usColor = '#666666';
 
   const cnData = [
     {label:'Kimi K2.6', value:3.41},
@@ -177,8 +193,8 @@ import Chart from 'chart.js/auto';
     {label:'Gemini 2.5 Flash Lite', value:0.40}
   ];
 
-  makeChart('chartCn', cnData, cnColors);
-  makeChart('chartUs', usData, usColors);
+  makeChart('chartCn', cnData, cnColors, { xTitle: '$ / 1M output tokens' });
+  makeChart('chartUs', usData, Array(10).fill(usColor), { xTitle: '$ / 1M output tokens', useLabels: true });
 })();
 </script>
 
@@ -194,7 +210,7 @@ import Chart from 'chart.js/auto';
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 1.25rem 1rem 0.75rem;
+    padding: 1.25rem 1rem 0.5rem;
   }
 
   .chart-title {
@@ -209,11 +225,11 @@ import Chart from 'chart.js/auto';
   .chart-title.us { border-color: #3498db; }
 
   .chart-card {
-    height: 380px;
+    height: 400px;
   }
 
   .chart-card canvas {
-    height: 300px !important;
+    height: 310px !important;
     width: 100% !important;
   }
 
@@ -221,7 +237,8 @@ import Chart from 'chart.js/auto';
     text-align: center;
     font-size: 0.7rem;
     color: var(--muted);
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.25rem;
   }
 
   .table-wrap {
