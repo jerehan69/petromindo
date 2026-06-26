@@ -39,7 +39,6 @@ const sheetUrl = "https://docs.google.com/spreadsheets/d/1s2cu53HMW7QClMiPpajXUQ
         <h3 class="chart-title us">🇺🇸 American</h3>
         <canvas id="chartUs"></canvas>
         <p class="chart-footer">Anthropic · OpenAI · Google · xAI · Meta</p>
-        <p class="vs-legend">Multiples vs DeepSeek V4 Flash ($0.18)</p>
       </div>
     </div>
 
@@ -126,6 +125,12 @@ import Chart from 'chart.js/auto';
           ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
           ctx.fillText(mult + 'x', x, y);
+          // vs Flash label on first bar
+          if (idx === 0) {
+            ctx.fillStyle = '#aaa';
+            ctx.font = '9px Inter, system-ui, sans-serif';
+            ctx.fillText('vs DeepSeek V4 Flash', x + ctx.measureText(mult + 'x ').width, y);
+          }
           ctx.restore();
         });
       });
@@ -207,7 +212,7 @@ import Chart from 'chart.js/auto';
   ];
 
   makeChart('chartCn', cnData, cnColors, { xTitle: '$ / 1M output tokens' });
-  makeChart('chartUs', usData, Array(10).fill(usColor), { xTitle: '$ / 1M output tokens', showLabels: true, maxX: 38 });
+  makeChart('chartUs', usData, Array(10).fill(usColor), { xTitle: '$ / 1M output tokens', showLabels: true, maxX: 50 });
 })();
 </script>
 
@@ -238,11 +243,11 @@ import Chart from 'chart.js/auto';
   .chart-title.us { border-color: #3498db; }
 
   .chart-card {
-    height: 430px;
+    height: 520px;
   }
 
   .chart-card canvas {
-    height: 320px !important;
+    height: 400px !important;
     width: 100% !important;
   }
 
@@ -254,13 +259,7 @@ import Chart from 'chart.js/auto';
     padding-top: 0;
   }
 
-  .vs-legend {
-    text-align: center;
-    font-size: 0.65rem;
-    color: #999;
-    margin-top: 0.15rem;
-    font-style: italic;
-  }
+
 
   .table-wrap {
     overflow-x: auto;
