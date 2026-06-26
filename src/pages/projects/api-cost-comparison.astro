@@ -125,11 +125,11 @@ import Chart from 'chart.js/auto';
           ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
           ctx.fillText(mult + 'x', x, y);
-          // vs Flash label on first bar
+          // vs Flash label on first bar - stacked below
           if (idx === 0) {
             ctx.fillStyle = '#aaa';
             ctx.font = '9px Inter, system-ui, sans-serif';
-            ctx.fillText('  vs DeepSeek V4 Flash', x + ctx.measureText(mult + 'x').width + 6, y);
+            ctx.fillText('vs V4 Flash', x, y + 12);
           }
           ctx.restore();
         });
@@ -212,7 +212,7 @@ import Chart from 'chart.js/auto';
   ];
 
   makeChart('chartCn', cnData, cnColors, { xTitle: '$ / 1M output tokens' });
-  makeChart('chartUs', usData, Array(10).fill(usColor), { xTitle: '$ / 1M output tokens', showLabels: true, maxX: 65 });
+  makeChart('chartUs', usData, Array(10).fill(usColor), { xTitle: '$ / 1M output tokens', showLabels: true, maxX: 45 });
 })();
 </script>
 
