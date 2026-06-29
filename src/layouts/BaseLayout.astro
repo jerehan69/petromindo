@@ -21,7 +21,7 @@ const { title = "News Scraper", description = "A targeted newsfeed for Indonesia
   <body>
     <nav>
       <div class="container">
-        <a href="/" class="logo">{activePage === "news" ? "feed" : "~/projects"}</a>
+        <a href="/" class="logo">{activePage === "news" ? "feed" : activePage === "fitness" ? "fitness" : "~/projects"}</a>
         <div class="links">
           <a href="/" class={activePage === "home" ? "active" : ""}>Home</a>
           <a href="/projects" class={activePage === "projects" ? "active" : ""}>Projects</a>
@@ -29,6 +29,7 @@ const { title = "News Scraper", description = "A targeted newsfeed for Indonesia
           <a href="/finance" class={activePage === "finance" ? "active" : ""}>Finance</a>
           <a href="/blog" class={activePage === "blog" ? "active" : ""}>Blog</a>
           <a href="/about" class={activePage === "about" ? "active" : ""}>About</a>
+          <a href="/fitness" class={activePage === "fitness" ? "active" : ""}>Fitness</a>
         </div>
       </div>
     </nav>
