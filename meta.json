@@ -1,7 +1,7 @@
 {
-  "date": "28/06/2026",
-  "snapshot_iso": "2026-06-28",
-  "updated_at_sgt": "28/06/2026 11:35:10",
+  "date": "29/06/2026",
+  "snapshot_iso": "2026-06-29",
+  "updated_at_sgt": "29/06/2026 11:35:23",
   "meeting": "28 Jul 2026",
   "meeting_iso": "2026-07-28",
   "current_target": "350-375",
@@ -10,6 +10,6 @@
   "prior_bucket_label": "(325-350)",
   "next_bucket_label": "(375-400)",
   "contract": "ZQN26.CBT",
-  "contract_price": 96.36499786376953,
-  "post_rate_bps": 370.3
+  "contract_price": 96.36750030517578,
+  "post_rate_bps": 368.3
 }
