@@ -103,6 +103,26 @@ const chartRows = [...rows].reverse().slice(-120).map(r => ({
 
 const FEDWATCH_API = "https://fedwatch.jemxx.dev";
 
+// --- Non-trading day detection -------------------------------------------------
+// US bond-market holidays 2026 (SIFMA-recognized closures). Weekends are
+// non-trading by definition. Used only to render the historical table honestly
+// (carry-forward rows thatYahoo returns for Sat/Sun/holidays get a label
+// instead of fake-identical %s). Flat *trading* days keep their real data.
+const US_HOLIDAYS_2026 = new Set([
+  "2026-01-01", "2026-01-19", "2026-02-16", "2026-02-15", "2026-05-25",
+  "2026-06-19", "2026-07-03", "2026-09-07", "2026-10-12", "2026-11-11",
+  "2026-11-26", "2026-12-25",
+]);
+const isNonTrading = (ddmmyyyy: string): boolean => {
+  const m = ddmmyyyy.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return false;
+  const [, d, mo, y] = m;
+  const iso = `${y}-${mo}-${d}`;
+  if (US_HOLIDAYS_2026.has(iso)) return true;
+  const dow = new Date(Number(y), Number(mo) - 1, Number(d)).getDay();
+  return dow === 0 || dow === 6; // Sun / Sat
+};
+
 // Bake dictionary for client JS to look up buckets from /scrape response
 const bucketLabels = {
   lower: LOW_LABEL.replace(/[()]/g, ""),
@@ -208,13 +228,20 @@ const bucketLabels = {
           <tbody id="history-body">
             {latest.map((row, idx) => {
               const fmt = (v: number) => (v * 100).toFixed(2) + "%";
+              const nonTrading = isNonTrading(row.date);
               return (
               <tr class={idx % 2 === 1 ? "alt" : ""}>
                 <td class="cell-date">{row.date}</td>
-                <td class="cell-prob lower">{fmt(row.lowerProb)}</td>
-                <td class="cell-prob current">{fmt(row.currentProb)}</td>
-                <td class="cell-prob higher">{fmt(row.higherProb)}</td>
-                <td class="cell-prob even-higher">{fmt(row.evenHigherProb)}</td>
+                {nonTrading ? (
+                  <td class="cell-prob nontrading" colspan="4">Non-trading day</td>
+                ) : (
+                  <Fragment>
+                    <td class="cell-prob lower">{fmt(row.lowerProb)}</td>
+                    <td class="cell-prob current">{fmt(row.currentProb)}</td>
+                    <td class="cell-prob higher">{fmt(row.higherProb)}</td>
+                    <td class="cell-prob even-higher">{fmt(row.evenHigherProb)}</td>
+                  </Fragment>
+                )}
               </tr>
               );
             })}
@@ -460,5 +487,9 @@ document.addEventListener("DOMContentLoaded", () => {
   .cell-prob.current { color: #2e7d32; }
   .cell-prob.higher { color: #e65100; }
   .cell-prob.even-higher { color: #c62828; }
+  .cell-prob.nontrading {
+    color: var(--muted); font-weight: 400; font-style: italic; font-size: 0.82rem;
+    text-align: center; letter-spacing: 0.02em;
+  }
   tr:hover td { background: rgba(0, 0, 0, 0.04); }
 </style>
