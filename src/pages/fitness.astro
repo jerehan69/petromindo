@@ -156,7 +156,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       setTimeout(() => {
         map.invalidateSize();
         map.fitBounds(L.latLngBounds(routeCoords), { padding: [50, 50] });
-      }, 100);
+        setTimeout(() => {
+          map.invalidateSize();
+          map.fitBounds(L.latLngBounds(routeCoords), { padding: [50, 50] });
+        }, 1000);
+      }, 500);
       routeLine = L.polyline(routeCoords, { color: '#4fc3f7', weight: 3, opacity: 0.35 }).addTo(map);
       trailLine = L.polyline([], { color: '#ff6b6b', weight: 4, opacity: 0.9 }).addTo(map);
       marker = L.circleMarker(routeCoords[0], { radius: 7, color: '#ff6b6b', fillColor: '#ff6b6b', fillOpacity: 1, weight: 2 }).addTo(map);
@@ -240,8 +244,14 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     }
 
     // Fix map sizing after layout settles
-    setTimeout(() => map.invalidateSize(), 300);
-    window.addEventListener('resize', () => map.invalidateSize());
+    setTimeout(() => {
+      map.invalidateSize();
+      if (currentWalkId && routeCoords) map.fitBounds(L.latLngBounds(routeCoords), { padding: [50, 50] });
+    }, 500);
+    window.addEventListener('resize', () => {
+      map.invalidateSize();
+      if (currentWalkId && routeCoords) map.fitBounds(L.latLngBounds(routeCoords), { padding: [50, 50] });
+    });
 
     // Load data then init
     Promise.all([
