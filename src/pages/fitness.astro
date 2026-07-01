@@ -750,8 +750,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             document.getElementById('dash-' + tab.dataset.dtab).classList.add('active');
           });
         });
-        init();
       });
+      // Run init immediately if DOM is already loaded
+      if (document.readyState === 'interactive' || document.readyState === 'complete') {
+        var t = document.querySelector('.dash-tab'); if (t) t.classList.add('active');
+        var c = document.querySelector('.dash-content'); if (c) c.classList.add('active');
+        init();
+      }
     })();
   </script>
 </BaseLayout>
