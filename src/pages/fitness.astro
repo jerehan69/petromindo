@@ -386,13 +386,17 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       c.innerHTML = html;
     }
 
+    fetch('/data/dashboard.json').then(r => r.json()).then(data => {
+      DASH = data;
+      renderOverview();
+    });
+
+    // Pure CSS charts - no Chart.js needed
     function renderSleep() {
       const c = document.getElementById('dash-sleep');
       const sleep = DASH.sleep.daily;
       if (!sleep.length) { c.innerHTML = '<p style="color:#666">No sleep data</p>'; return; }
-
       let html = '';
-      // Sleep duration bars
       const maxDur = Math.max(...sleep.map(s => (s.deep_min||0) + (s.light_min||0) + (s.rem_min||0) + (s.awake_min||0))) || 1;
       html += '<div class="dash-card"><h3>Sleep Duration (hours)</h3>';
       sleep.slice(-14).forEach(s => {
@@ -404,11 +408,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         html += '<div class="bar-row"><span class="bar-label">' + s.date.slice(5) + '</span><div class="bar-track" style="width:' + w + '%"><div class="bar-seg bar-deep" style="width:' + d + '%"></div><div class="bar-seg bar-light" style="width:' + l + '%"></div><div class="bar-seg bar-rem" style="width:' + r + '%"></div></div><span class="bar-val">' + (total/60).toFixed(1) + 'h</span></div>';
       });
       html += '</div>';
-
-      // Sleep stages breakdown
       html += '<div class="dash-card"><h3>Sleep Stages (Last 7 Days)</h3>';
       sleep.slice(-7).reverse().forEach(s => {
-        const total = (s.deep_min||0) + (s.light_min||0) + (s.rem_min||0) + (s.sawake_min||0);
+        const total = (s.deep_min||0) + (s.light_min||0) + (s.rem_min||0) + (s.awake_min||0);
         const dp = pct(s.deep_min||0, total);
         const lp = pct(s.light_min||0, total);
         const rp = pct(s.rem_min||0, total);
@@ -427,7 +429,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       const c = document.getElementById('dash-heart');
       const resting = DASH.heart_rate.resting;
       if (!resting.length) { c.innerHTML = '<p style="color:#666">No data</p>'; return; }
-
       const minBpm = Math.min(...resting.map(r => r.bpm)) - 5;
       const maxBpm = Math.max(...resting.map(r => r.bpm)) + 5;
       let html = '<div class="dash-card"><h3>Resting Heart Rate (bpm)</h3><div class="dot-chart">';
@@ -436,7 +437,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         html += '<div class="dot-group"><div class="dot-vert" style="bottom:' + y + '%" title="' + r.bpm + ' bpm"></div><span class="dot-label">' + r.date.slice(5) + '</span></div>';
       });
       html += '</div></div>';
-
       html += '<div class="dash-card"><h3>Recent Readings</h3>';
       resting.slice(-7).reverse().forEach(r => {
         html += '<div class="stat-row"><span class="lbl">' + r.date + '</span><span class="val">' + r.bpm + ' bpm</span></div>';
@@ -449,7 +449,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       const c = document.getElementById('dash-activity');
       const steps = DASH.activity.steps;
       if (!steps.length) { c.innerHTML = '<p style="color:#666">No data</p>'; return; }
-
       const maxSteps = Math.max(...steps.map(s => s.total_steps || 0)) || 1;
       let html = '<div class="dash-card"><h3>Daily Steps</h3>';
       steps.slice(-14).forEach(s => {
@@ -457,7 +456,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         html += '<div class="bar-row"><span class="bar-label">' + s.date.slice(5) + '</span><div class="bar-track" style="width:' + w + '%"><div class="bar-seg bar-steps" style="width:100%"></div></div><span class="bar-val">' + ((s.total_steps||0)).toLocaleString() + '</span></div>';
       });
       html += '</div>';
-
       const cal = DASH.activity.calories;
       const maxCal = Math.max(...cal.map(c2 => c2.total_calories || 0)) || 1;
       html += '<div class="dash-card"><h3>Daily Calories</h3>';
@@ -473,7 +471,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       const c = document.getElementById('dash-health');
       const spo2 = DASH.health.spo2;
       const stress = DASH.health.stress;
-
       let html = '';
       if (spo2.length) {
         html += '<div class="dash-card"><h3>Blood Oxygen (SpO2 %)</h3>';
@@ -496,91 +493,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       c.innerHTML = html;
     }
 
-    fetch('/data/dashboard.json').then(r => r.json()).then(data => {
-      DASH = data;
-      renderOverview();
-      renderSleep();
-      renderHeart();
-      renderActivity();
-      renderHealth();
-    });
-      if (sc) {
-        const sleep = DASH.sleep.daily.slice(-14);
-        charts.sleep = new Chart(sc, {
-          type: 'bar',
-          data: {
-            labels: sleep.map(s => s.date.slice(5)),
-            datasets: [
-              { label: 'Deep', data: sleep.map(s => Math.round(s.deep_min / 60 * 10) / 10), backgroundColor: '#4a90d9', stack: 'sleep' },
-              { label: 'Light', data: sleep.map(s => Math.round(s.light_min / 60 * 10) / 10), backgroundColor: '#87ceeb', stack: 'sleep' },
-              { label: 'REM', data: sleep.map(s => Math.round(s.rem_min / 60 * 10) / 10), backgroundColor: '#9b59b6', stack: 'sleep' },
-              { label: 'Awake', data: sleep.map(s => Math.round(s.awake_min / 60 * 10) / 10), backgroundColor: '#e74c3c', stack: 'sleep' },
-            ]
-          },
-          options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: 'Hours' } } }, plugins: { legend: { labels: { color: '#aaa' } } } }
-        });
-      }
-      // Resting HR
-      const rc = document.getElementById('chart-resting-hr');
-      if (rc) {
-        const hr = DASH.heart_rate.resting.slice(-14);
-        charts.resting = new Chart(rc, {
-          type: 'line',
-          data: { labels: hr.map(h => h.date.slice(5)), datasets: [{ label: 'Resting HR', data: hr.map(h => h.bpm), borderColor: '#ff6b6b', backgroundColor: '#ff6b6b20', fill: true, tension: 0.3 }] },
-          options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 35, max: 70 } }, plugins: { legend: { labels: { color: '#aaa' } } } }
-        });
-      }
-      // HRV
-      const hc = document.getElementById('chart-hrv');
-      if (hc) {
-        const sleep = DASH.sleep.daily.slice(-14).filter(s => s.hrv_median > 0);
-        charts.hrv = new Chart(hc, {
-          type: 'line',
-          data: { labels: sleep.map(s => s.date.slice(5)), datasets: [{ label: 'HRV Median', data: sleep.map(s => s.hrv_median), borderColor: '#4caf50', backgroundColor: '#4caf5020', fill: true, tension: 0.3 }] },
-          options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 120 } }, plugins: { legend: { labels: { color: '#aaa' } } } }
-        });
-      }
-      // Steps
-      const stc = document.getElementById('chart-steps');
-      if (stc) {
-        const steps = DASH.activity.steps.slice(-14);
-        charts.steps = new Chart(stc, {
-          type: 'bar',
-          data: { labels: steps.map(s => s.date.slice(5)), datasets: [{ label: 'Steps', data: steps.map(s => s.total_steps || 0), backgroundColor: '#4fc3f7' }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#aaa' } } } }
-        });
-      }
-      // Calories
-      const cc = document.getElementById('chart-calories');
-      if (cc) {
-        const cal = DASH.activity.calories.slice(-14);
-        charts.calories = new Chart(cc, {
-          type: 'bar',
-          data: { labels: cal.map(c => c.date.slice(5)), datasets: [{ label: 'Calories', data: cal.map(c => c.total_calories || 0), backgroundColor: '#ff9800' }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#aaa' } } } }
-        });
-      }
-      // SpO2
-      const spc = document.getElementById('chart-spo2');
-      if (spc) {
-        const spo2 = DASH.health.spo2.slice(-14);
-        charts.spo2 = new Chart(spc, {
-          type: 'line',
-          data: { labels: spo2.map(s => s.date.slice(5)), datasets: [{ label: 'SpO2 %', data: spo2.map(s => s.avg_spo2 || s.value || 0), borderColor: '#00bcd4', backgroundColor: '#00bcd420', fill: true, tension: 0.3 }] },
-          options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 90, max: 100 } }, plugins: { legend: { labels: { color: '#aaa' } } } }
-        });
-      }
-      // Stress
-      const strc = document.getElementById('chart-stress');
-      if (strc) {
-        const stress = DASH.health.stress.slice(-14);
-        charts.stress = new Chart(strc, {
-          type: 'line',
-          data: { labels: stress.map(s => s.date.slice(5)), datasets: [{ label: 'Stress', data: stress.map(s => s.avg_stress || s.value || 0), borderColor: '#ff5722', backgroundColor: '#ff572220', fill: true, tension: 0.3 }] },
-          options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } }, plugins: { legend: { labels: { color: '#aaa' } } } }
-        });
-      }
-    }
+    // Call all render functions after data loads
     fetch('/data/dashboard.json').then(r => r.json()).then(data => {
       DASH = data;
       renderOverview();
@@ -598,7 +511,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         tab.classList.add('active');
         document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
         if (tab.dataset.tab === 'walks') setTimeout(() => map.invalidateSize(), 50);
-        if (tab.dataset.tab === 'dashboard') setTimeout(() => initCharts(), 100);
       });
     });
 
@@ -608,19 +520,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         document.querySelectorAll('.dash-content').forEach(c => c.classList.remove('active'));
         tab.classList.add('active');
         document.getElementById('dash-' + tab.dataset.dtab).classList.add('active');
-        setTimeout(() => initCharts(), 100);
       });
     });
-    // Activate first dash tab by default
     document.querySelector('.dash-tab')?.classList.add('active');
     document.querySelector('.dash-content')?.classList.add('active');
-
-    function el(tag, cls, html) {
-      const e = document.createElement(tag);
-      if (cls) e.className = cls;
-      if (html) e.innerHTML = html;
-      return e;
-    }
 
     function fmtHrs(mins) {
       const h = Math.floor(mins / 60);
@@ -642,80 +545,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       html += '<div class="dash-card"><h3>Steps Today</h3><div class="val">' + (latestSteps ? latestSteps.total_steps?.toLocaleString() || '--' : '--') + '</div><div class="sub">' + (latestSteps ? 'Goal: ' + (latestSteps.goal_steps || '--') : '') + '</div></div>';
       html += '<div class="dash-card"><h3>Resting HR</h3><div class="val">' + (latestHR ? latestHR.bpm + ' bpm' : '--') + '</div><div class="sub">7-day avg: ' + (hr.length ? Math.round(hr.slice(-7).reduce((a,b) => a + b.bpm, 0) / Math.min(7, hr.length)) + ' bpm' : '--') + '</div></div>';
       html += '<div class="dash-card"><h3>HRV (Sleep)</h3><div class="val">' + (latest ? latest.hrv_median + ' ms' : '--') + '</div><div class="sub">' + (latest ? 'Std: ' + latest.hrv_std + ' ms' : '') + '</div></div>';
-      html += '</div>';
-      c.innerHTML = html;
-    }
-
-    function renderSleep() {
-      const c = document.getElementById('dash-sleep');
-      const sleep = DASH.sleep.daily;
-      if (!sleep.length) { c.innerHTML = '<p style="color:#666">No sleep data</p>'; return; }
-
-      let html = '<div class="dash-card"><h3>Sleep Duration (Last 14 Days)</h3><div class="dash-chart-lg" id="chart-sleep"></div></div>';
-      html += '<div class="dash-card"><h3>Sleep Stages</h3>';
-      sleep.slice(-7).reverse().forEach(s => {
-        const total = s.deep_min + s.light_min + s.rem_min + s.awake_min;
-        const dp = total > 0 ? Math.round(s.deep_min / total * 100) : 0;
-        const lp = total > 0 ? Math.round(s.light_min / total * 100) : 0;
-        const rp = total > 0 ? Math.round(s.rem_min / total * 100) : 0;
-        const ap = total > 0 ? Math.round(s.awake_min / total * 100) : 0;
-        html += '<div style="margin-bottom:12px">';
-        html += '<div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:4px"><span>' + s.date + '</span><span>' + fmtHrs(s.deep_min + s.light_min + s.rem_min) + ' · ' + s.efficiency + '%</span></div>';
-        html += '<div class="sleep-bar"><div class="sleep-deep" style="width:' + dp + '%"></div><div class="sleep-light" style="width:' + lp + '%"></div><div class="sleep-rem" style="width:' + rp + '%"></div><div class="sleep-awake" style="width:' + ap + '%"></div></div>';
-        html += '<div class="sleep-timeline"><span>Deep ' + fmtHrs(s.deep_min) + '</span><span>Light ' + fmtHrs(s.light_min) + '</span><span>REM ' + fmtHrs(s.rem_min) + '</span><span>Awake ' + fmtHrs(s.awake_min) + '</span></div>';
-        html += '</div>';
-      });
-      html += '</div>';
-      c.innerHTML = html;
-    }
-
-    function renderHeart() {
-      const c = document.getElementById('dash-heart');
-      const resting = DASH.heart_rate.resting;
-      if (!resting.length) { c.innerHTML = '<p style="color:#666">No heart rate data</p>'; return; }
-
-      let html = '<div class="dash-card"><h3>Resting Heart Rate (bpm)</h3><div class="dash-chart" id="chart-resting-hr"></div></div>';
-      html += '<div class="dash-card"><h3>HRV During Sleep (ms)</h3><div class="dash-chart" id="chart-hrv"></div></div>';
-      html += '<div class="dash-card"><h3>Recent Readings</h3>';
-      resting.slice(-7).reverse().forEach(r => {
-        html += '<div class="stat-row"><span class="lbl">' + r.date + '</span><span class="val">' + r.bpm + ' bpm</span></div>';
-      });
-      html += '</div>';
-      c.innerHTML = html;
-    }
-
-    function renderActivity() {
-      const c = document.getElementById('dash-activity');
-      const steps = DASH.activity.steps;
-      const calories = DASH.activity.calories;
-      if (!steps.length) { c.innerHTML = '<p style="color:#666">No activity data</p>'; return; }
-
-      let html = '<div class="dash-card"><h3>Daily Steps</h3><div class="dash-chart" id="chart-steps"></div></div>';
-      html += '<div class="dash-card"><h3>Daily Calories</h3><div class="dash-chart" id="chart-calories"></div></div>';
-      html += '<div class="dash-card"><h3>Recent Activity</h3>';
-      steps.slice(-7).reverse().forEach(s => {
-        html += '<div class="stat-row"><span class="lbl">' + s.date + '</span><span class="val">' + (s.total_steps || 0).toLocaleString() + ' steps</span></div>';
-      });
-      html += '</div>';
-      c.innerHTML = html;
-    }
-
-    function renderHealth() {
-      const c = document.getElementById('dash-health');
-      const spo2 = DASH.health.spo2;
-      const stress = DASH.health.stress;
-
-      let html = '<div class="dash-card"><h3>Blood Oxygen (SpO2 %)</h3><div class="dash-chart" id="chart-spo2"></div></div>';
-      html += '<div class="dash-card"><h3>Stress Level</h3><div class="dash-chart" id="chart-stress"></div></div>';
-      html += '<div class="dash-card"><h3>Health Summary</h3>';
-      if (spo2.length) {
-        const latest = spo2[spo2.length - 1];
-        html += '<div class="stat-row"><span class="lbl">SpO2 (latest)</span><span class="val">' + (latest.avg_spo2 || latest.value || '--') + '%</span></div>';
-      }
-      if (stress.length) {
-        const latest = stress[stress.length - 1];
-        html += '<div class="stat-row"><span class="lbl">Stress (latest)</span><span class="val">' + (latest.avg_stress || latest.value || '--') + '</span></div>';
-      }
       html += '</div>';
       c.innerHTML = html;
     }
