@@ -106,6 +106,20 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     .stat-row:last-child { border-bottom: none; }
     .stat-row .lbl { color: #888; }
     .stat-row .val { color: #fff; font-weight: 600; }
+    .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 11px; }
+    .bar-label { color: #888; min-width: 40px; text-align: right; }
+    .bar-track { height: 16px; background: #1a1a30; border-radius: 3px; overflow: hidden; display: flex; }
+    .bar-seg { height: 100%; }
+    .bar-deep { background: #4a90d9; }
+    .bar-light { background: #87ceeb; }
+    .bar-rem { background: #9b59b6; }
+    .bar-steps { background: #4fc3f7; }
+    .bar-cal { background: #ff9800; }
+    .bar-val { color: #fff; font-weight: 600; min-width: 60px; text-align: right; }
+    .dot-chart { display: flex; align-items: flex-end; gap: 4px; height: 120px; padding: 10px 0; }
+    .dot-group { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; position: relative; }
+    .dot-vert { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #ff6b6b; }
+    .dot-label { position: absolute; bottom: -18px; font-size: 9px; color: #666; }
     .hrv-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
     .hrv-good { background: #1b5e20; color: #4caf50; }
     .hrv-moderate { background: #e6510020; color: #ff9800; }
@@ -176,7 +190,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script>
     let WALKS = [], GPX = {};
     let currentWalkId = null, gpxData = null, N = 0, pointTime = null, routeCoords = null, cumDist = null;
@@ -345,18 +358,152 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       if (e.key === 'r') resetAnim();
     });
 
-    // ---- Dashboard ----
+    // ---- Dashboard (Pure HTML/CSS, no Chart.js) ----
     let DASH = null;
-    let charts = {};
-    function destroyCharts() {
-      Object.values(charts).forEach(c => c.destroy());
-      charts = {};
+
+    function pct(v, max) { return Math.min(100, Math.max(0, (v / max) * 100)); }
+    function fmtHrs(mins) {
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return h + 'h ' + (m < 10 ? '0' : '') + m + 'm';
     }
-    window.initCharts = function() {
-      if (!DASH) return;
-      destroyCharts();
-      // Sleep chart
-      const sc = document.getElementById('chart-sleep');
+
+    function renderOverview() {
+      const c = document.getElementById('dash-overview');
+      const sleep = DASH.sleep.daily;
+      const latest = sleep[sleep.length - 1] || {};
+      const steps = DASH.activity.steps;
+      const latestSteps = steps[steps.length - 1] || {};
+      const hr = DASH.heart_rate.resting;
+      const latestHR = hr[hr.length - 1] || {};
+
+      let html = '<div class="dash-grid">';
+      html += '<div class="dash-card"><h3>Last Night Sleep</h3><div class="val">' + fmtHrs((latest.deep_min||0) + (latest.light_min||0) + (latest.rem_min||0)) + '</div><div class="sub">' + (latest.efficiency||0) + '% efficiency</div></div>';
+      html += '<div class="dash-card"><h3>Steps Today</h3><div class="val">' + ((latestSteps.total_steps||0)).toLocaleString() + '</div><div class="sub">Goal: ' + (latestSteps.goal_steps||'--') + '</div></div>';
+      html += '<div class="dash-card"><h3>Resting HR</h3><div class="val">' + (latestHR.bpm||'--') + ' bpm</div><div class="sub">7-day avg: ' + (hr.length ? Math.round(hr.slice(-7).reduce((a,b)=>a+(b.bpm||0),0)/Math.min(7,hr.length)) + ' bpm' : '--') + '</div></div>';
+      html += '<div class="dash-card"><h3>HRV (Sleep)</h3><div class="val">' + (latest.hrv_median||'--') + ' ms</div><div class="sub">Std: ' + (latest.hrv_std||0) + ' ms</div></div>';
+      html += '</div>';
+      c.innerHTML = html;
+    }
+
+    function renderSleep() {
+      const c = document.getElementById('dash-sleep');
+      const sleep = DASH.sleep.daily;
+      if (!sleep.length) { c.innerHTML = '<p style="color:#666">No sleep data</p>'; return; }
+
+      let html = '';
+      // Sleep duration bars
+      const maxDur = Math.max(...sleep.map(s => (s.deep_min||0) + (s.light_min||0) + (s.rem_min||0) + (s.awake_min||0))) || 1;
+      html += '<div class="dash-card"><h3>Sleep Duration (hours)</h3>';
+      sleep.slice(-14).forEach(s => {
+        const total = (s.deep_min||0) + (s.light_min||0) + (s.rem_min||0) + (s.awake_min||0);
+        const w = pct(total, maxDur);
+        const d = pct(s.deep_min||0, total);
+        const l = pct(s.light_min||0, total);
+        const r = pct(s.rem_min||0, total);
+        html += '<div class="bar-row"><span class="bar-label">' + s.date.slice(5) + '</span><div class="bar-track" style="width:' + w + '%"><div class="bar-seg bar-deep" style="width:' + d + '%"></div><div class="bar-seg bar-light" style="width:' + l + '%"></div><div class="bar-seg bar-rem" style="width:' + r + '%"></div></div><span class="bar-val">' + (total/60).toFixed(1) + 'h</span></div>';
+      });
+      html += '</div>';
+
+      // Sleep stages breakdown
+      html += '<div class="dash-card"><h3>Sleep Stages (Last 7 Days)</h3>';
+      sleep.slice(-7).reverse().forEach(s => {
+        const total = (s.deep_min||0) + (s.light_min||0) + (s.rem_min||0) + (s.sawake_min||0);
+        const dp = pct(s.deep_min||0, total);
+        const lp = pct(s.light_min||0, total);
+        const rp = pct(s.rem_min||0, total);
+        const ap = pct(s.awake_min||0, total);
+        html += '<div class="sleep-stage-row">';
+        html += '<div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:4px"><span>' + s.date + '</span><span>' + fmtHrs((s.deep_min||0)+(s.light_min||0)+(s.rem_min||0)) + ' &middot; ' + (s.efficiency||0) + '% eff</span></div>';
+        html += '<div class="sleep-bar"><div class="sleep-deep" style="width:' + dp + '%"></div><div class="sleep-light" style="width:' + lp + '%"></div><div class="sleep-rem" style="width:' + rp + '%"></div><div class="sleep-awake" style="width:' + ap + '%"></div></div>';
+        html += '<div class="sleep-timeline"><span>Deep ' + fmtHrs(s.deep_min||0) + '</span><span>Light ' + fmtHrs(s.light_min||0) + '</span><span>REM ' + fmtHrs(s.rem_min||0) + '</span><span>Awake ' + fmtHrs(s.awake_min||0) + '</span></div>';
+        html += '</div>';
+      });
+      html += '</div>';
+      c.innerHTML = html;
+    }
+
+    function renderHeart() {
+      const c = document.getElementById('dash-heart');
+      const resting = DASH.heart_rate.resting;
+      if (!resting.length) { c.innerHTML = '<p style="color:#666">No data</p>'; return; }
+
+      const minBpm = Math.min(...resting.map(r => r.bpm)) - 5;
+      const maxBpm = Math.max(...resting.map(r => r.bpm)) + 5;
+      let html = '<div class="dash-card"><h3>Resting Heart Rate (bpm)</h3><div class="dot-chart">';
+      resting.slice(-14).forEach(r => {
+        const y = 100 - pct(r.bpm - minBpm, maxBpm - minBpm);
+        html += '<div class="dot-group"><div class="dot-vert" style="bottom:' + y + '%" title="' + r.bpm + ' bpm"></div><span class="dot-label">' + r.date.slice(5) + '</span></div>';
+      });
+      html += '</div></div>';
+
+      html += '<div class="dash-card"><h3>Recent Readings</h3>';
+      resting.slice(-7).reverse().forEach(r => {
+        html += '<div class="stat-row"><span class="lbl">' + r.date + '</span><span class="val">' + r.bpm + ' bpm</span></div>';
+      });
+      html += '</div>';
+      c.innerHTML = html;
+    }
+
+    function renderActivity() {
+      const c = document.getElementById('dash-activity');
+      const steps = DASH.activity.steps;
+      if (!steps.length) { c.innerHTML = '<p style="color:#666">No data</p>'; return; }
+
+      const maxSteps = Math.max(...steps.map(s => s.total_steps || 0)) || 1;
+      let html = '<div class="dash-card"><h3>Daily Steps</h3>';
+      steps.slice(-14).forEach(s => {
+        const w = pct(s.total_steps || 0, maxSteps);
+        html += '<div class="bar-row"><span class="bar-label">' + s.date.slice(5) + '</span><div class="bar-track" style="width:' + w + '%"><div class="bar-seg bar-steps" style="width:100%"></div></div><span class="bar-val">' + ((s.total_steps||0)).toLocaleString() + '</span></div>';
+      });
+      html += '</div>';
+
+      const cal = DASH.activity.calories;
+      const maxCal = Math.max(...cal.map(c2 => c2.total_calories || 0)) || 1;
+      html += '<div class="dash-card"><h3>Daily Calories</h3>';
+      cal.slice(-14).forEach(c2 => {
+        const w = pct(c2.total_calories || 0, maxCal);
+        html += '<div class="bar-row"><span class="bar-label">' + c2.date.slice(5) + '</span><div class="bar-track" style="width:' + w + '%"><div class="bar-seg bar-cal" style="width:100%"></div></div><span class="bar-val">' + (c2.total_calories||0) + ' cal</span></div>';
+      });
+      html += '</div>';
+      c.innerHTML = html;
+    }
+
+    function renderHealth() {
+      const c = document.getElementById('dash-health');
+      const spo2 = DASH.health.spo2;
+      const stress = DASH.health.stress;
+
+      let html = '';
+      if (spo2.length) {
+        html += '<div class="dash-card"><h3>Blood Oxygen (SpO2 %)</h3>';
+        spo2.slice(-14).forEach(s => {
+          const v = s.avg_spo2 || s.value || 0;
+          const color = v >= 95 ? '#4caf50' : v >= 90 ? '#ff9800' : '#f44336';
+          html += '<div class="bar-row"><span class="bar-label">' + s.date.slice(5) + '</span><div class="bar-track" style="width:' + pct(v, 100) + '%"><div class="bar-seg" style="width:100%;background:' + color + '"></div></div><span class="bar-val">' + v + '%</span></div>';
+        });
+        html += '</div>';
+      }
+      if (stress.length) {
+        html += '<div class="dash-card"><h3>Stress Level</h3>';
+        stress.slice(-14).forEach(s => {
+          const v = s.avg_stress || s.value || 0;
+          const color = v < 30 ? '#4caf50' : v < 50 ? '#ff9800' : '#f44336';
+          html += '<div class="bar-row"><span class="bar-label">' + s.date.slice(5) + '</span><div class="bar-track" style="width:' + pct(v, 100) + '%"><div class="bar-seg" style="width:100%;background:' + color + '"></div></div><span class="bar-val">' + v + '</span></div>';
+        });
+        html += '</div>';
+      }
+      c.innerHTML = html;
+    }
+
+    fetch('/data/dashboard.json').then(r => r.json()).then(data => {
+      DASH = data;
+      renderOverview();
+      renderSleep();
+      renderHeart();
+      renderActivity();
+      renderHealth();
+    });
       if (sc) {
         const sleep = DASH.sleep.daily.slice(-14);
         charts.sleep = new Chart(sc, {
