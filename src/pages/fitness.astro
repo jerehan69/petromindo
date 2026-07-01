@@ -363,8 +363,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         document.querySelectorAll('.dash-content').forEach(c => c.classList.remove('active'));
         tab.classList.add('active');
         document.getElementById('dash-' + tab.dataset.dtab).classList.add('active');
+        setTimeout(() => initCharts(), 50);
       });
     });
+    // Activate first dash tab by default
+    document.querySelector('.dash-tab')?.classList.add('active');
+    document.querySelector('.dash-content')?.classList.add('active');
 
     // ---- Dashboard ----
     let DASH = null;
