@@ -345,31 +345,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       if (e.key === 'r') resetAnim();
     });
 
-    // ---- Tab switching ----
-    document.querySelectorAll('.fit-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.fit-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-        if (tab.dataset.tab === 'walks') setTimeout(() => map.invalidateSize(), 50);
-        if (tab.dataset.tab === 'dashboard') setTimeout(() => initCharts(), 50);
-      });
-    });
-
-    document.querySelectorAll('.dash-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.dash-content').forEach(c => c.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById('dash-' + tab.dataset.dtab).classList.add('active');
-        setTimeout(() => initCharts(), 50);
-      });
-    });
-    // Activate first dash tab by default
-    document.querySelector('.dash-tab')?.classList.add('active');
-    document.querySelector('.dash-content')?.classList.add('active');
-
     // ---- Dashboard ----
     let DASH = null;
     let charts = {};
@@ -467,6 +442,31 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       renderActivity();
       renderHealth();
     });
+
+    // ---- Tab switching ----
+    document.querySelectorAll('.fit-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.fit-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        if (tab.dataset.tab === 'walks') setTimeout(() => map.invalidateSize(), 50);
+        if (tab.dataset.tab === 'dashboard') setTimeout(() => initCharts(), 100);
+      });
+    });
+
+    document.querySelectorAll('.dash-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.dash-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('dash-' + tab.dataset.dtab).classList.add('active');
+        setTimeout(() => initCharts(), 100);
+      });
+    });
+    // Activate first dash tab by default
+    document.querySelector('.dash-tab')?.classList.add('active');
+    document.querySelector('.dash-content')?.classList.add('active');
 
     function el(tag, cls, html) {
       const e = document.createElement(tag);
