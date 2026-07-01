@@ -352,7 +352,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       Object.values(charts).forEach(c => c.destroy());
       charts = {};
     }
-    function initCharts() {
+    window.initCharts = function() {
       if (!DASH) return;
       destroyCharts();
       // Sleep chart
