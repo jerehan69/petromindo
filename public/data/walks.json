@@ -8,7 +8,7 @@
     "dur": 621,
     "steps": 1089,
     "cal": 40,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 99
   },
   {
@@ -32,7 +32,7 @@
     "dur": 1001,
     "steps": 882,
     "cal": 40,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 77
   },
   {
@@ -128,7 +128,7 @@
     "dur": 695,
     "steps": 1020,
     "cal": 41,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 90
   },
   {
@@ -140,7 +140,7 @@
     "dur": 999,
     "steps": 970,
     "cal": 39,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 81
   },
   {
@@ -152,7 +152,7 @@
     "dur": 2236,
     "steps": 957,
     "cal": 58,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 77
   },
   {
@@ -164,7 +164,7 @@
     "dur": 891,
     "steps": 1674,
     "cal": 67,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 108
   },
   {
@@ -176,7 +176,7 @@
     "dur": 1240,
     "steps": 1724,
     "cal": 70,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 88
   },
   {
@@ -224,7 +224,7 @@
     "dur": 580,
     "steps": 723,
     "cal": 33,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 86
   },
   {
@@ -248,7 +248,7 @@
     "dur": 1459,
     "steps": 1931,
     "cal": 78,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 91
   },
   {
@@ -260,7 +260,7 @@
     "dur": 343,
     "steps": 360,
     "cal": 14,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 73
   },
   {
@@ -284,7 +284,7 @@
     "dur": 1300,
     "steps": 2019,
     "cal": 78,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 102
   },
   {
@@ -320,7 +320,7 @@
     "dur": 971,
     "steps": 1370,
     "cal": 56,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 99
   },
   {
@@ -344,7 +344,7 @@
     "dur": 806,
     "steps": 754,
     "cal": 30,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 75
   },
   {
@@ -380,7 +380,7 @@
     "dur": 1100,
     "steps": 1645,
     "cal": 78,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 103
   },
   {
@@ -392,7 +392,7 @@
     "dur": 1095,
     "steps": 1190,
     "cal": 52,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 78
   },
   {
@@ -452,7 +452,7 @@
     "dur": 1123,
     "steps": 1806,
     "cal": 73,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 106
   },
   {
@@ -476,7 +476,7 @@
     "dur": 663,
     "steps": 231,
     "cal": 17,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 86
   },
   {
@@ -488,7 +488,7 @@
     "dur": 884,
     "steps": 1387,
     "cal": 55,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 84
   },
   {
@@ -500,7 +500,7 @@
     "dur": 886,
     "steps": 1404,
     "cal": 46,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 78
   },
   {
@@ -524,7 +524,7 @@
     "dur": 2213,
     "steps": 3564,
     "cal": 130,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 96
   },
   {
@@ -560,7 +560,7 @@
     "dur": 765,
     "steps": 976,
     "cal": 43,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 104
   },
   {
@@ -584,7 +584,7 @@
     "dur": 460,
     "steps": 634,
     "cal": 25,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 85
   },
   {
@@ -608,7 +608,7 @@
     "dur": 2081,
     "steps": 2197,
     "cal": 93,
-    "hasGpx": false,
+    "hasGpx": true,
     "avgHr": 78
   },
   {
