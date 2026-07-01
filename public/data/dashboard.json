@@ -12,9 +12,7 @@
         "avg_hr": 0,
         "avg_spo2": 0,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-11",
@@ -27,9 +25,7 @@
         "avg_hr": 46,
         "avg_spo2": 0,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-12",
@@ -42,9 +38,7 @@
         "avg_hr": 45,
         "avg_spo2": 96,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-13",
@@ -57,9 +51,7 @@
         "avg_hr": 47,
         "avg_spo2": 97,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-14",
@@ -72,9 +64,7 @@
         "avg_hr": 46,
         "avg_spo2": 97,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-15",
@@ -87,9 +77,7 @@
         "avg_hr": 49,
         "avg_spo2": 97,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-16",
@@ -102,9 +90,7 @@
         "avg_hr": 47,
         "avg_spo2": 96,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-17",
@@ -117,9 +103,7 @@
         "avg_hr": 45,
         "avg_spo2": 96,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-18",
@@ -132,9 +116,7 @@
         "avg_hr": 44,
         "avg_spo2": 97,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-19",
@@ -147,9 +129,7 @@
         "avg_hr": 46,
         "avg_spo2": 97,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-20",
@@ -162,9 +142,7 @@
         "avg_hr": 43,
         "avg_spo2": 97,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-21",
@@ -177,9 +155,7 @@
         "avg_hr": 48,
         "avg_spo2": 97,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-22",
@@ -192,9 +168,7 @@
         "avg_hr": 46,
         "avg_spo2": 97,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-23",
@@ -207,9 +181,7 @@
         "avg_hr": 43,
         "avg_spo2": 97,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-24",
@@ -222,9 +194,7 @@
         "avg_hr": 43,
         "avg_spo2": 98,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-26",
@@ -237,9 +207,7 @@
         "avg_hr": 47,
         "avg_spo2": 97,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-27",
@@ -252,9 +220,7 @@
         "avg_hr": 46,
         "avg_spo2": 97,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       },
       {
         "date": "2026-06-28",
@@ -267,9 +233,7 @@
         "avg_hr": 48,
         "avg_spo2": 98,
         "hrv_median": 0,
-        "hrv_std": 0,
-        "bedtime": null,
-        "wake_time": null
+        "hrv_std": 0
       }
     ],
     "latest": {

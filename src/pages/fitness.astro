@@ -190,8 +190,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/js/dashboard.js" is:inline></script>
   <script>
-    let WALKS = [], GPX = {};
+    window.map = null;
+    var WALKS = [], GPX = {};
     let currentWalkId = null, gpxData = null, N = 0, pointTime = null, routeCoords = null, cumDist = null;
     let idx = 0, playing = false, speed = 1, timer = null, animStartWall = 0, animStartPoint = 0;
 
@@ -358,17 +360,118 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       if (e.key === 'r') resetAnim();
     });
 
-    // ---- Dashboard (Pure HTML/CSS, no Chart.js) ----
-    let DASH = null;
+    // Dashboard loaded from /js/dashboard.js
+    // Walks map functionality below:
+    const mapEl = document.getElementById('map');
+    if (mapEl && !window.map) {
+      window.map = L.map('map', { zoomControl: true, attributionControl: false });
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 20, attribution: '&copy; OSM &copy; CARTO' }).addTo(window.map);
+    }
+    const map = window.map;
 
-    window.pct = function(v, max) { return Math.min(100, Math.max(0, (v / max) * 100)); };
-    window.fmtHrs = function(mins) {
-      const h = Math.floor(mins / 60);
-      const m = mins % 60;
-      return h + 'h ' + (m < 10 ? '0' : '') + m + 'm';
-    };
+    // ---- Walks functionality ----
+    let currentWalkId = null, gpxData = null, N = 0, pointTime = null, routeCoords = null, cumDist = null;
+    let idx = 0, playing = false, speed = 1, timer = null, animStartWall = 0, animStartPoint = 0;
+    let routeLine, trailLine, marker, startMarker, endMarker;
 
-    window.renderOverview = function() {
+    const $ = id => document.getElementById(id);
+    const playBtn = $('playBtn'), resetBtn = $('resetBtn'), slider = $('slider');
+    const pctDisp = $('pctDisp'), ovTime = $('ovTime'), ovTotal = $('ovTotal');
+    const ovDist = $('ovDist'), ovPace = $('ovPace'), ovSteps = $('ovSteps'), ovCal = $('ovCal');
+    const walkList = $('walkList');
+
+    function fmtTime(s) { const m = Math.floor(s/60), sec = Math.floor(s%60); return m + ':' + (sec<10?'0':'') + sec; }
+    function clearMap() { [routeLine, trailLine, marker, startMarker, endMarker].forEach(l => { if(l) map.removeLayer(l); }); }
+
+    function loadWalk(id) {
+      pause(); clearMap();
+      const walk = WALKS.find(w => w.id === id);
+      if (!walk || !GPX[id]) return;
+      currentWalkId = id;
+      gpxData = GPX[id];
+      N = gpxData.length;
+      const startMs = new Date(gpxData[0].t).getTime();
+      pointTime = new Float64Array(N); routeCoords = new Array(N);
+      for (let i = 0; i < N; i++) { pointTime[i] = (new Date(gpxData[i].t).getTime() - startMs) / 1000; routeCoords[i] = [gpxData[i].lat, gpxData[i].lon]; }
+      cumDist = new Float64Array(N);
+      for (let i = 1; i < N; i++) { const dLat = (gpxData[i].lat - gpxData[i-1].lat) * Math.PI / 180; const dLon = (gpxData[i].lon - gpxData[i-1].lon) * Math.PI / 180; const a = Math.sin(dLat/2)**2 + Math.cos(gpxData[i-1].lat*Math.PI/180) * Math.cos(gpxData[i].lat*Math.PI/180) * Math.sin(dLon/2)**2; cumDist[i] = cumDist[i-1] + 6371000 * 2 * Math.asin(Math.sqrt(a)); }
+      setTimeout(() => { map.invalidateSize(); map.fitBounds(L.latLngBounds(routeCoords), { padding: [50, 50] }); }, 300);
+      routeLine = L.polyline(routeCoords, { color: '#4fc3f7', weight: 3, opacity: 0.35 }).addTo(map);
+      trailLine = L.polyline([], { color: '#ff6b6b', weight: 4, opacity: 0.9 }).addTo(map);
+      marker = L.circleMarker(routeCoords[0], { radius: 7, color: '#ff6b6b', fillColor: '#ff6b6b', fillOpacity: 1, weight: 2 }).addTo(map);
+      startMarker = L.circleMarker(routeCoords[0], { radius: 5, color: '#4caf50', fillColor: '#4caf50', fillOpacity: 0.8 }).addTo(map);
+      endMarker = L.circleMarker(routeCoords[N-1], { radius: 5, color: '#f44336', fillColor: '#f44336', fillOpacity: 0.8 }).addTo(map);
+      ovTotal.textContent = fmtTime(pointTime[N-1]);
+      document.querySelectorAll('.walk-item').forEach(el => el.classList.remove('active'));
+      const el = document.querySelector('[data-id="' + id + '"]'); if (el) el.classList.add('active');
+      idx = 0; draw(0);
+    }
+
+    function draw(i) {
+      if (!gpxData) return;
+      idx = Math.max(0, Math.min(N-1, i));
+      const pct = idx / (N-1);
+      const walk = WALKS.find(w => w.id === currentWalkId);
+      ovTime.textContent = fmtTime(pointTime[idx]);
+      pctDisp.textContent = Math.round(pct * 100) + '%';
+      slider.value = Math.round(pct * 1000);
+      ovDist.textContent = (cumDist[idx] / 1000).toFixed(2);
+      let pace = '--';
+      let si = idx;
+      while (si > 0 && pointTime[idx] - pointTime[si] < 60) si--;
+      if (si < idx) { const d = (cumDist[idx] - cumDist[si]) / 1000; const t = (pointTime[idx] - pointTime[si]) / 60; if (d > 0.01) pace = (t / d).toFixed(1); }
+      ovPace.textContent = pace;
+      if (walk) { ovSteps.textContent = Math.round(pct * walk.steps).toLocaleString(); ovCal.textContent = Math.round(pct * walk.cal); }
+      marker.setLatLng([gpxData[idx].lat, gpxData[idx].lon]);
+      trailLine.setLatLngs(routeCoords.slice(0, idx + 1));
+    }
+
+    function tick() {
+      if (!playing) return;
+      const target = animStartPoint + (Date.now() - animStartWall) / 1000 * speed;
+      let lo = 0, hi = N - 1; while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (pointTime[mid] <= target) lo = mid; else hi = mid - 1; }
+      draw(lo);
+      if (idx >= N - 1) { playing = false; playBtn.textContent = '▶ Play'; clearInterval(timer); timer = null; }
+    }
+
+    function playFn() { if (!gpxData || idx >= N - 1) draw(0); animStartWall = Date.now(); animStartPoint = pointTime[idx]; playing = true; playBtn.textContent = '⏸ Pause'; if (timer) clearInterval(timer); timer = setInterval(tick, 50); tick(); }
+    function pause() { playing = false; playBtn.textContent = '▶ Play'; if (timer) { clearInterval(timer); timer = null; } }
+    function resetAnim() { pause(); draw(0); }
+    function setProgress(p) { pause(); draw(Math.round(p * (N - 1) / 100)); }
+
+    function buildSidebar() {
+      WALKS.forEach(w => {
+        const div = document.createElement('div');
+        div.className = 'walk-item' + (w.hasGpx ? '' : ' no-gpx');
+        div.dataset.id = w.id;
+        const durM = Math.floor(w.dur / 60);
+        const paceStr = w.dist > 0 ? (w.dur / 60 / w.dist).toFixed(1) + "'/km" : '';
+        div.innerHTML = '<div class="dot ' + (w.hasGpx ? 'has' : 'none') + '"></div>' +
+          '<div class="wi-body"><div class="wi-name">' + w.date + ' ' + w.time + ' · ' + w.type + '</div>' +
+          '<div class="wi-meta"><span>⏱ ' + durM + 'm</span><span>👣 ' + w.steps.toLocaleString() + '</span><span>🔥 ' + w.cal + '</span>' +
+          (w.avgHr ? '<span>🫀 ' + w.avgHr + '</span>' : '') +
+          (paceStr ? '<span>🏃 ' + paceStr + '</span>' : '') +
+          (!w.hasGpx ? '<span style="color:#444">(no GPS)</span>' : '') +
+          '</div></div><div class="wi-dist">' + w.dist.toFixed(2) + '<span style="font-size:11px;color:#666">km</span></div>';
+        if (w.hasGpx) div.addEventListener('click', () => loadWalk(w.id));
+        walkList.appendChild(div);
+      });
+    }
+
+    setTimeout(() => map.invalidateSize(), 300);
+    window.addEventListener('resize', () => map.invalidateSize());
+
+    Promise.all([fetch('/data/walks.json').then(r => r.json()), fetch('/data/gpx.json').then(r => r.json())]).then(([wg, gp]) => {
+      WALKS = wg; GPX = gp; buildSidebar();
+      const first = WALKS.find(w => w.hasGpx);
+      if (first) loadWalk(first.id);
+    });
+
+    playBtn.addEventListener('click', () => playing ? pause() : playFn());
+    resetBtn.addEventListener('click', resetAnim);
+    slider.addEventListener('input', () => setProgress(parseInt(slider.value) / 10));
+    document.querySelectorAll('.speed-btn').forEach(b => b.addEventListener('click', () => { document.querySelectorAll('.speed-btn').forEach(x => x.classList.remove('active')); b.classList.add('active'); speed = parseFloat(b.dataset.speed); }));
+    document.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'k') { e.preventDefault(); playing ? pause() : playFn(); } if (e.key === 'r') resetAnim(); });
       const c = document.getElementById('dash-overview');
       const sleep = DASH.sleep.daily;
       const latest = sleep[sleep.length - 1] || {};
