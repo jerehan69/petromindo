@@ -1,0 +1,1036 @@
+{
+  "sleep": {
+    "daily": [
+      {
+        "date": "2026-06-10",
+        "duration_hours": 0.0,
+        "deep_min": 0,
+        "light_min": 0,
+        "rem_min": 0,
+        "awake_min": 0,
+        "efficiency": 0,
+        "avg_hr": 0,
+        "avg_spo2": 0,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-11",
+        "duration_hours": 0.1,
+        "deep_min": 80,
+        "light_min": 205,
+        "rem_min": 72,
+        "awake_min": 0,
+        "efficiency": 0,
+        "avg_hr": 46,
+        "avg_spo2": 0,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-12",
+        "duration_hours": 0.1,
+        "deep_min": 55,
+        "light_min": 257,
+        "rem_min": 90,
+        "awake_min": 0,
+        "efficiency": 0,
+        "avg_hr": 45,
+        "avg_spo2": 96,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-13",
+        "duration_hours": 0.1,
+        "deep_min": 74,
+        "light_min": 216,
+        "rem_min": 95,
+        "awake_min": 0,
+        "efficiency": 0,
+        "avg_hr": 47,
+        "avg_spo2": 97,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-14",
+        "duration_hours": 0.1,
+        "deep_min": 61,
+        "light_min": 289,
+        "rem_min": 89,
+        "awake_min": 0,
+        "efficiency": 0,
+        "avg_hr": 46,
+        "avg_spo2": 97,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-15",
+        "duration_hours": 0.1,
+        "deep_min": 83,
+        "light_min": 241,
+        "rem_min": 98,
+        "awake_min": 9,
+        "efficiency": 0,
+        "avg_hr": 49,
+        "avg_spo2": 97,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-16",
+        "duration_hours": 0.1,
+        "deep_min": 47,
+        "light_min": 219,
+        "rem_min": 72,
+        "awake_min": 0,
+        "efficiency": 0,
+        "avg_hr": 47,
+        "avg_spo2": 96,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-17",
+        "duration_hours": 0.1,
+        "deep_min": 57,
+        "light_min": 285,
+        "rem_min": 86,
+        "awake_min": 3,
+        "efficiency": 0,
+        "avg_hr": 45,
+        "avg_spo2": 96,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-18",
+        "duration_hours": 0.1,
+        "deep_min": 81,
+        "light_min": 189,
+        "rem_min": 84,
+        "awake_min": 0,
+        "efficiency": 0,
+        "avg_hr": 44,
+        "avg_spo2": 97,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-19",
+        "duration_hours": 0.1,
+        "deep_min": 67,
+        "light_min": 323,
+        "rem_min": 88,
+        "awake_min": 0,
+        "efficiency": 0,
+        "avg_hr": 46,
+        "avg_spo2": 97,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-20",
+        "duration_hours": 0.1,
+        "deep_min": 35,
+        "light_min": 226,
+        "rem_min": 72,
+        "awake_min": 33,
+        "efficiency": 0,
+        "avg_hr": 43,
+        "avg_spo2": 97,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-21",
+        "duration_hours": 0.1,
+        "deep_min": 62,
+        "light_min": 198,
+        "rem_min": 45,
+        "awake_min": 0,
+        "efficiency": 0,
+        "avg_hr": 48,
+        "avg_spo2": 97,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-22",
+        "duration_hours": 0.1,
+        "deep_min": 53,
+        "light_min": 350,
+        "rem_min": 123,
+        "awake_min": 15,
+        "efficiency": 0,
+        "avg_hr": 46,
+        "avg_spo2": 97,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-23",
+        "duration_hours": 0.1,
+        "deep_min": 35,
+        "light_min": 287,
+        "rem_min": 93,
+        "awake_min": 0,
+        "efficiency": 0,
+        "avg_hr": 43,
+        "avg_spo2": 97,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-24",
+        "duration_hours": 0.1,
+        "deep_min": 40,
+        "light_min": 259,
+        "rem_min": 58,
+        "awake_min": 8,
+        "efficiency": 0,
+        "avg_hr": 43,
+        "avg_spo2": 98,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-26",
+        "duration_hours": 0.1,
+        "deep_min": 77,
+        "light_min": 285,
+        "rem_min": 88,
+        "awake_min": 35,
+        "efficiency": 0,
+        "avg_hr": 47,
+        "avg_spo2": 97,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-27",
+        "duration_hours": 0.1,
+        "deep_min": 40,
+        "light_min": 153,
+        "rem_min": 64,
+        "awake_min": 0,
+        "efficiency": 0,
+        "avg_hr": 46,
+        "avg_spo2": 97,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      },
+      {
+        "date": "2026-06-28",
+        "duration_hours": 0.1,
+        "deep_min": 62,
+        "light_min": 232,
+        "rem_min": 66,
+        "awake_min": 3,
+        "efficiency": 0,
+        "avg_hr": 48,
+        "avg_spo2": 98,
+        "hrv_median": 0,
+        "hrv_std": 0,
+        "bedtime": null,
+        "wake_time": null
+      }
+    ],
+    "latest": {
+      "avg_hrv": 0,
+      "bedtime": 1781079300,
+      "sleep_deep_duration": 0,
+      "device_bedtime": 1781079300,
+      "device_wake_up_time": 1781084100,
+      "sleep_duration": 60,
+      "bed_timestamp": 1781079240,
+      "hrv_analysis_timestamp": 0,
+      "hrv_base_max": 0,
+      "hrv_base_min": 0,
+      "hrv_lower_quantile": 0,
+      "hrv_median": 0,
+      "hrv_std": 0,
+      "hrv_upper_quantile": 0,
+      "out_bed_timestamp": 1781084100,
+      "sleep_light_duration": 0,
+      "bed_duration": 4860,
+      "max_hrv": 0,
+      "min_hrv": 0,
+      "protoTime": 1781084100,
+      "duration": 80,
+      "sleep_efficiency": 98,
+      "timezone": 32,
+      "version": 6,
+      "awake_count": 0,
+      "sleep_awake_duration": 0,
+      "wake_up_time": 1781084100
+    }
+  },
+  "heart_rate": {
+    "resting": [
+      {
+        "date": "2026-06-28",
+        "bpm": 45
+      },
+      {
+        "date": "2026-06-27",
+        "bpm": 45
+      },
+      {
+        "date": "2026-06-26",
+        "bpm": 41
+      },
+      {
+        "date": "2026-06-25",
+        "bpm": 41
+      },
+      {
+        "date": "2026-06-24",
+        "bpm": 41
+      },
+      {
+        "date": "2026-06-23",
+        "bpm": 42
+      },
+      {
+        "date": "2026-06-22",
+        "bpm": 42
+      },
+      {
+        "date": "2026-06-21",
+        "bpm": 47
+      },
+      {
+        "date": "2026-06-20",
+        "bpm": 41
+      },
+      {
+        "date": "2026-06-19",
+        "bpm": 45
+      },
+      {
+        "date": "2026-06-18",
+        "bpm": 41
+      },
+      {
+        "date": "2026-06-17",
+        "bpm": 41
+      },
+      {
+        "date": "2026-06-16",
+        "bpm": 44
+      },
+      {
+        "date": "2026-06-15",
+        "bpm": 43
+      },
+      {
+        "date": "2026-06-14",
+        "bpm": 44
+      },
+      {
+        "date": "2026-06-13",
+        "bpm": 44
+      },
+      {
+        "date": "2026-06-12",
+        "bpm": 63
+      },
+      {
+        "date": "2026-06-11",
+        "bpm": 44
+      },
+      {
+        "date": "2026-06-10",
+        "bpm": 47
+      }
+    ],
+    "latest": [
+      {
+        "time": "2026-06-10 16:01",
+        "ts": 1781078460,
+        "bpm": 58
+      },
+      {
+        "time": "2026-06-10 16:00",
+        "ts": 1781078400,
+        "bpm": 70
+      },
+      {
+        "time": "2026-06-10 15:59",
+        "ts": 1781078340,
+        "bpm": 76
+      },
+      {
+        "time": "2026-06-10 15:58",
+        "ts": 1781078280,
+        "bpm": 70
+      },
+      {
+        "time": "2026-06-10 15:57",
+        "ts": 1781078220,
+        "bpm": 68
+      },
+      {
+        "time": "2026-06-10 15:56",
+        "ts": 1781078160,
+        "bpm": 67
+      },
+      {
+        "time": "2026-06-10 15:45",
+        "ts": 1781077500,
+        "bpm": 68
+      },
+      {
+        "time": "2026-06-10 15:36",
+        "ts": 1781076960,
+        "bpm": 104
+      },
+      {
+        "time": "2026-06-10 15:30",
+        "ts": 1781076600,
+        "bpm": 70
+      },
+      {
+        "time": "2026-06-10 15:29",
+        "ts": 1781076540,
+        "bpm": 71
+      }
+    ]
+  },
+  "activity": {
+    "steps": [
+      {
+        "date": "2026-06-10",
+        "ts": 1781049600,
+        "calories": 134,
+        "distance": 2526,
+        "steps": 3450
+      },
+      {
+        "date": "2026-06-11",
+        "ts": 1781136000,
+        "calories": 199,
+        "distance": 4408,
+        "steps": 6063
+      },
+      {
+        "date": "2026-06-12",
+        "ts": 1781222400,
+        "calories": 288,
+        "distance": 4650,
+        "steps": 7528
+      },
+      {
+        "date": "2026-06-13",
+        "ts": 1781308800,
+        "calories": 764,
+        "distance": 7844,
+        "steps": 16502
+      },
+      {
+        "date": "2026-06-14",
+        "ts": 1781395200,
+        "calories": 470,
+        "distance": 4500,
+        "steps": 10611
+      },
+      {
+        "date": "2026-06-15",
+        "ts": 1781481600,
+        "calories": 753,
+        "distance": 7152,
+        "steps": 15349
+      },
+      {
+        "date": "2026-06-16",
+        "ts": 1781568000,
+        "calories": 534,
+        "distance": 6019,
+        "steps": 12131
+      },
+      {
+        "date": "2026-06-17",
+        "ts": 1781654400,
+        "calories": 72,
+        "distance": 1254,
+        "steps": 2003
+      },
+      {
+        "date": "2026-06-18",
+        "ts": 1781740800,
+        "calories": 361,
+        "distance": 7557,
+        "steps": 12725
+      },
+      {
+        "date": "2026-06-19",
+        "ts": 1781827200,
+        "calories": 247,
+        "distance": 5347,
+        "steps": 7515
+      },
+      {
+        "date": "2026-06-20",
+        "ts": 1781913600,
+        "calories": 476,
+        "distance": 5184,
+        "steps": 10468
+      },
+      {
+        "date": "2026-06-21",
+        "ts": 1782000000,
+        "calories": 714,
+        "distance": 5615,
+        "steps": 14118
+      },
+      {
+        "date": "2026-06-22",
+        "ts": 1782086400,
+        "calories": 134,
+        "distance": 3113,
+        "steps": 4971
+      },
+      {
+        "date": "2026-06-23",
+        "ts": 1782172800,
+        "calories": 153,
+        "distance": 3358,
+        "steps": 4346
+      },
+      {
+        "date": "2026-06-24",
+        "ts": 1782259200,
+        "calories": 244,
+        "distance": 4254,
+        "steps": 6424
+      },
+      {
+        "date": "2026-06-25",
+        "ts": 1782345600,
+        "calories": 240,
+        "distance": 5492,
+        "steps": 7712
+      },
+      {
+        "date": "2026-06-26",
+        "ts": 1782432000,
+        "calories": 191,
+        "distance": 5778,
+        "steps": 6655
+      },
+      {
+        "date": "2026-06-27",
+        "ts": 1782518400,
+        "calories": 889,
+        "distance": 4196,
+        "steps": 12398
+      },
+      {
+        "date": "2026-06-28",
+        "ts": 1782604800,
+        "calories": 538,
+        "distance": 1563,
+        "steps": 8015
+      }
+    ],
+    "calories": [
+      {
+        "date": "2026-06-10",
+        "ts": 1781049600,
+        "calories": 225
+      },
+      {
+        "date": "2026-06-11",
+        "ts": 1781136000,
+        "calories": 644
+      },
+      {
+        "date": "2026-06-12",
+        "ts": 1781222400,
+        "calories": 817
+      },
+      {
+        "date": "2026-06-13",
+        "ts": 1781308800,
+        "calories": 1096
+      },
+      {
+        "date": "2026-06-14",
+        "ts": 1781395200,
+        "calories": 764
+      },
+      {
+        "date": "2026-06-15",
+        "ts": 1781481600,
+        "calories": 1046
+      },
+      {
+        "date": "2026-06-16",
+        "ts": 1781568000,
+        "calories": 853
+      },
+      {
+        "date": "2026-06-17",
+        "ts": 1781654400,
+        "calories": 323
+      },
+      {
+        "date": "2026-06-18",
+        "ts": 1781740800,
+        "calories": 816
+      },
+      {
+        "date": "2026-06-19",
+        "ts": 1781827200,
+        "calories": 641
+      },
+      {
+        "date": "2026-06-20",
+        "ts": 1781913600,
+        "calories": 885
+      },
+      {
+        "date": "2026-06-21",
+        "ts": 1782000000,
+        "calories": 1024
+      },
+      {
+        "date": "2026-06-22",
+        "ts": 1782086400,
+        "calories": 498
+      },
+      {
+        "date": "2026-06-23",
+        "ts": 1782172800,
+        "calories": 522
+      },
+      {
+        "date": "2026-06-24",
+        "ts": 1782259200,
+        "calories": 717
+      },
+      {
+        "date": "2026-06-25",
+        "ts": 1782345600,
+        "calories": 490
+      },
+      {
+        "date": "2026-06-26",
+        "ts": 1782432000,
+        "calories": 497
+      },
+      {
+        "date": "2026-06-27",
+        "ts": 1782518400,
+        "calories": 1380
+      },
+      {
+        "date": "2026-06-28",
+        "ts": 1782604800,
+        "calories": 670
+      }
+    ],
+    "intensity": [
+      {
+        "date": "2026-06-10",
+        "ts": 1781049600,
+        "duration": 21
+      },
+      {
+        "date": "2026-06-11",
+        "ts": 1781136000,
+        "duration": 41
+      },
+      {
+        "date": "2026-06-12",
+        "ts": 1781222400,
+        "duration": 37
+      },
+      {
+        "date": "2026-06-13",
+        "ts": 1781308800,
+        "duration": 163
+      },
+      {
+        "date": "2026-06-14",
+        "ts": 1781395200,
+        "duration": 91
+      },
+      {
+        "date": "2026-06-15",
+        "ts": 1781481600,
+        "duration": 128
+      },
+      {
+        "date": "2026-06-16",
+        "ts": 1781568000,
+        "duration": 100
+      },
+      {
+        "date": "2026-06-17",
+        "ts": 1781654400,
+        "duration": 7
+      },
+      {
+        "date": "2026-06-18",
+        "ts": 1781740800,
+        "duration": 74
+      },
+      {
+        "date": "2026-06-19",
+        "ts": 1781827200,
+        "duration": 56
+      },
+      {
+        "date": "2026-06-20",
+        "ts": 1781913600,
+        "duration": 75
+      },
+      {
+        "date": "2026-06-21",
+        "ts": 1782000000,
+        "duration": 118
+      },
+      {
+        "date": "2026-06-22",
+        "ts": 1782086400,
+        "duration": 27
+      },
+      {
+        "date": "2026-06-23",
+        "ts": 1782172800,
+        "duration": 29
+      },
+      {
+        "date": "2026-06-24",
+        "ts": 1782259200,
+        "duration": 41
+      },
+      {
+        "date": "2026-06-25",
+        "ts": 1782345600,
+        "duration": 56
+      },
+      {
+        "date": "2026-06-26",
+        "ts": 1782432000,
+        "duration": 37
+      },
+      {
+        "date": "2026-06-27",
+        "ts": 1782518400,
+        "duration": 158
+      },
+      {
+        "date": "2026-06-28",
+        "ts": 1782604800,
+        "duration": 88
+      }
+    ]
+  },
+  "health": {
+    "spo2": [
+      {
+        "date": "2026-06-15",
+        "ts": 1781481600,
+        "avg_spo2": 96,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 97,
+          "time": 1781567700,
+          "dbKey": "spo2",
+          "dbTime": 1781538900,
+          "sid": "2136861710"
+        },
+        "max_spo2": 98,
+        "min_spo2": 90
+      },
+      {
+        "date": "2026-06-16",
+        "ts": 1781568000,
+        "avg_spo2": 96,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 98,
+          "time": 1781653980,
+          "dbKey": "spo2",
+          "dbTime": 1781625180,
+          "sid": "2136861710"
+        },
+        "max_spo2": 99,
+        "min_spo2": 91
+      },
+      {
+        "date": "2026-06-17",
+        "ts": 1781654400,
+        "avg_spo2": 96,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 96,
+          "time": 1781740380,
+          "dbKey": "spo2",
+          "dbTime": 1781711580,
+          "sid": "2136861710"
+        },
+        "max_spo2": 98,
+        "min_spo2": 90
+      },
+      {
+        "date": "2026-06-18",
+        "ts": 1781740800,
+        "avg_spo2": 97,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 98,
+          "time": 1781826780,
+          "dbKey": "spo2",
+          "dbTime": 1781797980,
+          "sid": "2136861710"
+        },
+        "max_spo2": 99,
+        "min_spo2": 92
+      },
+      {
+        "date": "2026-06-19",
+        "ts": 1781827200,
+        "avg_spo2": 96,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 98,
+          "time": 1781913300,
+          "dbKey": "spo2",
+          "dbTime": 1781884500,
+          "sid": "2136861710"
+        },
+        "max_spo2": 98,
+        "min_spo2": 92
+      },
+      {
+        "date": "2026-06-20",
+        "ts": 1781913600,
+        "avg_spo2": 96,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 98,
+          "time": 1781999100,
+          "dbKey": "spo2",
+          "dbTime": 1781970300,
+          "sid": "2136861710"
+        },
+        "max_spo2": 98,
+        "min_spo2": 90
+      },
+      {
+        "date": "2026-06-21",
+        "ts": 1782000000,
+        "avg_spo2": 96,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 98,
+          "time": 1782085980,
+          "dbKey": "spo2",
+          "dbTime": 1782057180,
+          "sid": "2136861710"
+        },
+        "max_spo2": 98,
+        "min_spo2": 94
+      },
+      {
+        "date": "2026-06-22",
+        "ts": 1782086400,
+        "avg_spo2": 97,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 98,
+          "time": 1782172380,
+          "dbKey": "spo2",
+          "dbTime": 1782143580,
+          "sid": "2136861710"
+        },
+        "max_spo2": 98,
+        "min_spo2": 91
+      },
+      {
+        "date": "2026-06-23",
+        "ts": 1782172800,
+        "avg_spo2": 97,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 97,
+          "time": 1782258780,
+          "dbKey": "spo2",
+          "dbTime": 1782229980,
+          "sid": "2136861710"
+        },
+        "max_spo2": 98,
+        "min_spo2": 92
+      },
+      {
+        "date": "2026-06-24",
+        "ts": 1782259200,
+        "avg_spo2": 97,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 98,
+          "time": 1782344640,
+          "dbKey": "spo2",
+          "dbTime": 1782315840,
+          "sid": "2136861710"
+        },
+        "max_spo2": 99,
+        "min_spo2": 94
+      },
+      {
+        "date": "2026-06-25",
+        "ts": 1782345600,
+        "avg_spo2": 97,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 95,
+          "time": 1782420780,
+          "dbKey": "spo2",
+          "dbTime": 1782391980,
+          "sid": "2136861710"
+        },
+        "max_spo2": 98,
+        "min_spo2": 93
+      },
+      {
+        "date": "2026-06-26",
+        "ts": 1782432000,
+        "avg_spo2": 97,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 95,
+          "time": 1782517980,
+          "dbKey": "spo2",
+          "dbTime": 1782489180,
+          "sid": "2136861710"
+        },
+        "max_spo2": 99,
+        "min_spo2": 94
+      },
+      {
+        "date": "2026-06-27",
+        "ts": 1782518400,
+        "avg_spo2": 96,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 98,
+          "time": 1782604440,
+          "dbKey": "spo2",
+          "dbTime": 1782575640,
+          "sid": "2136861710"
+        },
+        "max_spo2": 99,
+        "min_spo2": 91
+      },
+      {
+        "date": "2026-06-28",
+        "ts": 1782604800,
+        "avg_spo2": 97,
+        "lack_spo2_count": 0,
+        "latest_spo2": {
+          "spo2": 97,
+          "time": 1782633780,
+          "dbKey": "spo2",
+          "dbTime": 1782604980,
+          "sid": "2136861710"
+        },
+        "max_spo2": 98,
+        "min_spo2": 95
+      }
+    ],
+    "stress": [
+      {
+        "date": "2026-06-10",
+        "ts": 1781049600,
+        "avg_stress": 31,
+        "max_stress": 44,
+        "min_stress": 17,
+        "stress_scale": {
+          "mild": 24,
+          "moderate": 0,
+          "relax": 6,
+          "severe": 0
+        }
+      },
+      {
+        "date": "2026-06-11",
+        "ts": 1781136000,
+        "avg_stress": 34,
+        "max_stress": 43,
+        "min_stress": 18,
+        "stress_scale": {
+          "mild": 38,
+          "moderate": 0,
+          "relax": 2,
+          "severe": 0
+        }
+      },
+      {
+        "date": "2026-06-12",
+        "ts": 1781222400,
+        "avg_stress": 26,
+        "max_stress": 45,
+        "min_stress": 13,
+        "stress_scale": {
+          "mild": 34,
+          "moderate": 0,
+          "relax": 35,
+          "severe": 0
+        }
+      },
+      {
+        "date": "2026-06-13",
+        "ts": 1781308800,
+        "avg_stress": 25,
+        "max_stress": 50,
+        "min_stress": 14,
+        "stress_scale": {
+          "mild": 29,
+          "moderate": 0,
+          "relax": 40,
+          "severe": 0
+        }
+      }
+    ]
+  }
+}
