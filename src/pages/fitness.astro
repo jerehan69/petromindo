@@ -645,7 +645,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         var latestHR = hr[hr.length - 1] || {};
         var html = '<div class="dash-grid">';
         html += '<div class="dash-card"><h3>Last Night Sleep</h3><div class="val">' + fmtHrs((latest.deep_min||0) + (latest.light_min||0) + (latest.rem_min||0)) + '</div><div class="sub">' + (latest.efficiency||0) + '% efficiency</div></div>';
-        html += '<div class="dash-card"><h3>Steps Today</h3><div class="val">' + ((latestSteps.total_steps||0)).toLocaleString() + '</div><div class="sub">Goal: ' + (latestSteps.goal_steps||'--') + '</div></div>';
+        html += '<div class="dash-card"><h3>Steps Today</h3><div class="val">' + ((latestSteps.steps||0)).toLocaleString() + '</div><div class="sub">' + (latestSteps.distance ? 'Distance: ' + (latestSteps.distance/1000).toFixed(1) + 'km' : '') + '</div></div>';
+        html += '<div class="dash-card"><h3>Calories Today</h3><div class="val">' + (latestSteps.calories||0) + ' cal</div><div class="sub">7-day avg: ' + (function(){var c=hr.slice(-7).reduce(function(a,b){return a+(b.calories||0);},0); return Math.round(c/Math.min(7,hr.length));})() + ' cal</div></div>';
         html += '<div class="dash-card"><h3>Resting HR</h3><div class="val">' + (latestHR.bpm||'--') + ' bpm</div><div class="sub">7-day avg: ' + (hr.length ? Math.round(hr.slice(-7).reduce(function(a,b){return a+(b.bpm||0);},0)/Math.min(7,hr.length)) + ' bpm' : '--') + '</div></div>';
         html += '<div class="dash-card"><h3>HRV (Sleep)</h3><div class="val">' + (latest.hrv_median||'--') + ' ms</div><div class="sub">Std: ' + (latest.hrv_std||0) + ' ms</div></div>';
         html += '</div>';
@@ -696,14 +697,14 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       function renderActivity() {
         var c = document.getElementById('dash-activity'); if (!c || !DASH) return;
         var steps = DASH.activity.steps || []; if (!steps.length) { c.innerHTML = '<p style="color:#666">No data</p>'; return; }
-        var maxSteps = 1; steps.forEach(function(s) { if ((s.total_steps||0) > maxSteps) maxSteps = s.total_steps||0; });
+        var maxSteps = 1; steps.forEach(function(s) { if ((s.steps||0) > maxSteps) maxSteps = s.steps||0; });
         var html = '<div class="dash-card"><h3>Daily Steps</h3>';
-        steps.slice(-14).forEach(function(s) { var w = pct(s.total_steps || 0, maxSteps); html += '<div class="bar-row"><span class="bar-label">' + s.date.slice(5) + '</span><div class="bar-track" style="width:' + w + '%"><div class="bar-seg bar-steps" style="width:100%"></div></div><span class="bar-val">' + ((s.total_steps||0)).toLocaleString() + '</span></div>'; });
+        steps.slice(-14).forEach(function(s) { var w = pct(s.steps || 0, maxSteps); html += '<div class="bar-row"><span class="bar-label">' + s.date.slice(5) + '</span><div class="bar-track" style="width:' + w + '%"><div class="bar-seg bar-steps" style="width:100%"></div></div><span class="bar-val">' + ((s.steps||0)).toLocaleString() + '</span></div>'; });
         html += '</div>';
         var cal = DASH.activity.calories || [];
-        var maxCal = 1; cal.forEach(function(c2) { if ((c2.total_calories||0) > maxCal) maxCal = c2.total_calories||0; });
+        var maxCal = 1; cal.forEach(function(c2) { if ((c2.calories||0) > maxCal) maxCal = c2.calories||0; });
         html += '<div class="dash-card"><h3>Daily Calories</h3>';
-        cal.slice(-14).forEach(function(c2) { var w = pct(c2.total_calories || 0, maxCal); html += '<div class="bar-row"><span class="bar-label">' + c2.date.slice(5) + '</span><div class="bar-track" style="width:' + w + '%"><div class="bar-seg bar-cal" style="width:100%"></div></div><span class="bar-val">' + (c2.total_calories||0) + ' cal</span></div>'; });
+        cal.slice(-14).forEach(function(c2) { var w = pct(c2.calories || 0, maxCal); html += '<div class="bar-row"><span class="bar-label">' + c2.date.slice(5) + '</span><div class="bar-track" style="width:' + w + '%"><div class="bar-seg bar-cal" style="width:100%"></div></div><span class="bar-val">' + (c2.calories||0) + ' cal</span></div>'; });
         html += '</div>';
         c.innerHTML = html;
       }
